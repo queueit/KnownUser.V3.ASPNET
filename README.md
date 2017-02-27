@@ -54,7 +54,7 @@ public class AdvancedController : Controller
                 string.Empty, RegexOptions.IgnoreCase);
 
                 var validationResult = 
-                KnownUser.ValidateRequestByIntegrationConfig(pureUrl, queueitToken,                 IntegrationConfigProvider.Instance.GetCachedIntegrationConfig("customerid"), 
+                KnownUser.ValidateRequestByIntegrationConfig(pureUrl, queueitToken,  IntegrationConfigProvider.Instance.GetCachedIntegrationConfig("customerid"), 
                                         "customerId", "secretKey");
 
                 if (validationResult.DoRedirect)
@@ -75,5 +75,49 @@ public class AdvancedController : Controller
             }
 		}
 	}
+}
+```
+
+## Alternative Implementation
+If your application server (maybe due to security reasons) is not allowed to do external GET requests, then you have three options:
+
+1. Manually download the configuration file from Queue-it Go self-service portal, save it on your application server and load it from local disk
+2. Use and internal gateway server to download the configuration file and save to application server
+3. Specify the configuration in code like this
+ 
+```
+private void DoValidationByLocalEventConfig()
+{
+	try
+    {
+	    var queueitToken = HttpContext.Current.Request.QueryString[KnownUser.QueueITTokenKey];
+	    var pureUrl = Regex.Replace(Request.Url.ToString(), @"([\?&])(" + KnownUser.QueueITTokenKey + "=[^&]*)", string.Empty, RegexOptions.IgnoreCase);
+	    var eventConfig = new EventConfig()
+        {
+	        EventId = "event1", //ID of the queue to use
+            CookieDomain = ".mydomain.com", //Domain name where the Queue-it session cookie should be saved
+            QueueDomain = "myqueue.com", //Domian name of the queue - usually in the format [CustomerId].queue-it.net
+            CookieValidityMinute = 15, //Validity of the Queue-it session cookie 
+            ExtendCookieValidity = false, //Should the Queue-it session cookie validity time be extended each time the validation is run
+            Culture = "en-US", //Culture of the queue ticket layout in the format specified here: https://msdn.microsoft.com/en-us/library/ee825488(v=cs.20).aspx
+            LayoutName = "MyCustomLayoutName" //Name of the queue ticket layout - e.g. "Default layout by Queue-it"
+       };
+       var validationResult = KnownUser.ValidateRequestByLocalEventConfig(pureUrl, queueitToken, eventConfig, "customerId","secretKey");
+       if (validationResult.DoRedirect)
+	       {
+	           Response.Redirect(validationResult.RedirectUrl);
+           }
+      else
+           {
+	           //Request can continue if you want to remove queueittoken form querystring parameter uncomment below codes
+	           if(HttpContext.Current.Request.Url.ToString().Contains(KnownUser.QueueITTokenKey))
+                    Response.Redirect(pureUrl);
+           }
+     }
+     catch (Exception ex)
+     {
+         //There was an error validationg the request
+        //Please log the error and let uses continue 
+    }
 }
 ```
