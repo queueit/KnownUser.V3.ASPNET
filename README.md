@@ -39,26 +39,21 @@ If the timestamp or hash is invalid, the user is send back to the queue.
 ## Implementation
 The KnownUser validation must *only* be done on *page requests*. This can be done in asp.net mvc by adding it as an ActionFilter on the page controllers **or** if using aspx webforms then in the Master Page's Init() method **or** with a proper filtering on the Global.asax Application_BeginRequest(). 
 
-This example is using the *[IntegrationConfigProvider](https://github.com/queueit/QueueIT.Security-NetFramework/blob/master/QueueIT.Security.Examples.Webforms/Advanced.aspx.cs)* to download the queue configuration. example The most simple example is just to put it on the page load request:
+This example is using the *[IntegrationConfigProvider](https://github.com/queueit/KnownUser.V3.Net_beta/blob/master/Documentation/IntegrationConfigProvider.cs)* to download the queue configuration. example The most simple example is just to put it on the page load request:
 ```
 public class AdvancedController : Controller
 {
 	if (IntegrationConfigProvider.Instance.Exp != null)
-    {
-	    // Log KnownUser.LastIntegratinProviderException to queueit
-        IntegrationConfigProvider.Instance.Exp = null;
+    	{
+	    	// Log KnownUser.LastIntegratinProviderException to queueit
+        	IntegrationConfigProvider.Instance.Exp = null;
         }
-            try
-            {
-                var queueitToken = 
-                HttpContext.Current.Request.QueryString[KnownUser.QueueITTokenKey];
-                var pureUrl = Regex.Replace(Request.Url.ToString(),
-                @"([\?&])(" + KnownUser.QueueITTokenKey + "=[^&]*)",
-                string.Empty, RegexOptions.IgnoreCase);
+        try
+        {
+        	var queueitToken = HttpContext.Current.Request.QueryString[KnownUser.QueueITTokenKey];
+                var pureUrl = Regex.Replace(Request.Url.ToString(), @"([\?&])(" + KnownUser.QueueITTokenKey + "=[^&]*)", string.Empty, RegexOptions.IgnoreCase);
 
-                var validationResult = 
-                KnownUser.ValidateRequestByIntegrationConfig(pureUrl, queueitToken,  IntegrationConfigProvider.Instance.GetCachedIntegrationConfig("customerid"), 
-                                        "customerId", "secretKey");
+                var validationResult = KnownUser.ValidateRequestByIntegrationConfig(pureUrl, queueitToken,  IntegrationConfigProvider.Instance.GetCachedIntegrationConfig("customerid"), "customerId", "secretKey");
 
                 if (validationResult.DoRedirect)
                 {
@@ -70,14 +65,12 @@ public class AdvancedController : Controller
                     if(HttpContext.Current.Request.Url.ToString().Contains(KnownUser.QueueITTokenKey))
                         Response.Redirect(pureUrl);
                 }
-            }
-            catch (Exception ex)
-            {
+  	}
+        catch (Exception ex)
+        {
                 //it was an error validationg the request
                 //please log the error and lets uses continue 
-            }
-		}
-	}
+        }
 }
 ```
 
@@ -91,7 +84,7 @@ If your application server (maybe due to security reasons) is not allowed to do 
 ```
 private void DoValidationByLocalEventConfig()
 {
-	try
+    try
     {
 	    var queueitToken = HttpContext.Current.Request.QueryString[KnownUser.QueueITTokenKey];
 	    var pureUrl = Regex.Replace(Request.Url.ToString(), @"([\?&])(" + KnownUser.QueueITTokenKey + "=[^&]*)", string.Empty, RegexOptions.IgnoreCase);
