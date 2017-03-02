@@ -39,24 +39,30 @@ If the timestamp or hash is invalid, the user is send back to the queue.
 ## Implementation
 The KnownUser validation must *only* be done on *page requests*. This can be done in asp.net mvc by adding it as an ActionFilter on the page controllers **or** if using aspx webforms then in the Master Page's Init() method **or** with a proper filtering on the Global.asax Application_BeginRequest(). 
 
-This example is using the *[IntegrationConfigProvider](https://github.com/queueit/KnownUser.V3.Net_beta/blob/master/Documentation/IntegrationConfigProvider.cs)* to download the queue configuration. example The most simple example is just to put it on the page load request:
+This example is using the *[IntegrationConfigProvider](https://github.com/queueit/KnownUser.V3.Net_beta/blob/master/Documentation/IntegrationConfigProvider.cs)* to download the queue configuration example. The most simple example is just to put it on the page load request:
 ```
 public class AdvancedController : Controller
 {
-	if (IntegrationConfigProvider.Instance.Exp != null)
-    	{
-	    	// Log KnownUser.LastIntegratinProviderException to queueit
-        	IntegrationConfigProvider.Instance.Exp = null;
-        }
-        try
-        {
-        	var queueitToken = HttpContext.Current.Request.QueryString[KnownUser.QueueITTokenKey];
-                var pureUrl = Regex.Replace(Request.Url.ToString(), @"([\?&])(" + KnownUser.QueueITTokenKey + "=[^&]*)", string.Empty, RegexOptions.IgnoreCase);
+            if (IntegrationConfigProvider.Instance.Exp != null)
+            {
+                // Use your own logging framework to log the KnownUser.LastIntegratinProviderException
+                IntegrationConfigProvider.Instance.Exp = null;
+            }
 
-                var validationResult = KnownUser.ValidateRequestByIntegrationConfig(pureUrl, queueitToken,  IntegrationConfigProvider.Instance.GetCachedIntegrationConfig("customerid"), "customerId", "secretKey");
+            try
+            {
+                var queueitToken = HttpContext.Current.Request.QueryString[KnownUser.QueueITTokenKey];
+                var pureUrl = Regex.Replace(Request.Url.ToString(), @"([\?&])(" + KnownUser.QueueITTokenKey + "=[^&]*)", string.Empty, RegexOptions.IgnoreCase);
+                var integrationConfig = IntegrationConfigProvider.Instance.GetCachedIntegrationConfig("customerid");
+                var customerId = "Your Queue-it customer ID";
+                var secreteKey = "Your 72 char secrete key as specified in Go Queue-it self-service platform";
+
+                //Verify if the user has been through the queue
+                var validationResult = KnownUser.ValidateRequestByIntegrationConfig(pureUrl, queueitToken, integrationConfig, customerId, secreteKey);
 
                 if (validationResult.DoRedirect)
                 {
+                    //Send the user to the queue - either becuase hash was missing or becuase is was invalid
                     Response.Redirect(validationResult.RedirectUrl);
                 }
                 else
@@ -64,14 +70,15 @@ public class AdvancedController : Controller
                     //Request can continue - we remove queueittoken form querystring parameter to avoid sharing of user specific token
                     if(HttpContext.Current.Request.Url.ToString().Contains(KnownUser.QueueITTokenKey))
                         Response.Redirect(pureUrl);
+
                 }
-  	}
-        catch (Exception ex)
-        {
-                //it was an error validationg the request
-                //please log the error and lets uses continue 
+            }
+            catch (Exception ex)
+            {
+                //There was an error validationg the request
+                //Use your own logging framework to log the Exception
+                //This was a configuration exception, so we let the user continue
+            }
         }
 }
 ```
-
-
