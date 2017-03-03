@@ -4,11 +4,9 @@ The Queue-it Security Framework is used to ensure that end users cannot bypass t
 When a user is redirected back from the queue to your website, the queue engine can attache a query string parameter (`queueittoken`) containing some information about the user. 
 The most important fields of the `queueittoken` are:
 
-q - the users unique queue identifier
-
-ts - a timestamp of how long this redirect is valid
-
-h - a hash of the token
+ - q - the users unique queue identifier
+ - ts - a timestamp of how long this redirect is valid
+ - h - a hash of the token
 
 The high level logic is as follows:
 
