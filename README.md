@@ -66,13 +66,13 @@ private void DoValidation()
         if (validationResult.DoRedirect)
         {
             //Send the user to the queue - either becuase hash was missing or becuase is was invalid
-            Response.Redirect(validationResult.RedirectUrl);
+            Response.Redirect(validationResult.RedirectUr,false);
         }
         else
         {
             //Request can continue - we remove queueittoken form querystring parameter to avoid sharing of user specific token
             if(HttpContext.Current.Request.Url.ToString().Contains(KnownUser.QueueITTokenKey))
-                Response.Redirect(pureUrl);
+                Response.Redirect(pureUrl,false);
 
         }
     }
