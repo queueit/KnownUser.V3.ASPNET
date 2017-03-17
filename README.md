@@ -34,7 +34,7 @@ When a user enter your website and the URL matches a Trigger-expression the corr
 The Action specifies which queue the users should be send to. 
 In this way you can specify which queue(s) should protect which page(s) on the fly without changing the server-side integration.
 
-This configuration can then be downloaded to your application server as shown in the *[IntegrationConfigProvider](https://github.com/queueit/KnownUser.V3.Net_beta/blob/master/Documentation/README.md#downloading-the-integration-configuration)* example. 
+This configuration can then be downloaded to your application server as shown in the *[IntegrationConfigProvider](https://github.com/queueit/KnownUser.V3.Net_beta/blob/master/Documentation/IntegrationConfigProvider.cs)* example. 
 The configuration will be downloaded and cached for 5 minutes. 
 
 ### 2. Validate the `queueittoken` and store a session cookie
