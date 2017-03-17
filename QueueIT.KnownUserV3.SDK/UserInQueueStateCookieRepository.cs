@@ -23,8 +23,6 @@ namespace QueueIT.KnownUserV3.SDK
             int cookieValidityMinute,
             string secretKey
             );
-
-        
     }
 
     internal class UserInQueueStateCookieRepository : IUserInQueueStateRepository
@@ -146,7 +144,7 @@ namespace QueueIT.KnownUserV3.SDK
             var expirationTimeString = DateTimeHelper.GetUnixTimeStampFromDate(expirationTime).ToString();
             HttpCookie cookie = new HttpCookie(cookieKey);
             cookie.Values["IsCookieExtendable"] = isCookieExtendable.ToString();
-            cookie.Values["Hash"] = GenerateHash( isCookieExtendable.ToString(), expirationTimeString, secretKey);
+            cookie.Values["Hash"] = GenerateHash(isCookieExtendable.ToString(), expirationTimeString, secretKey);
             cookie.Values["Expires"] = expirationTimeString;
             if (!string.IsNullOrEmpty(cookieDomain))
                 cookie.Domain = cookieDomain;
@@ -162,7 +160,7 @@ namespace QueueIT.KnownUserV3.SDK
             var storedHash = cookie.Values["Hash"];
             var expirationTimeString = cookie.Values["Expires"];
             var cookieExtensibility = cookie.Values["IsCookieExtendable"];
-            var expectedHash = GenerateHash( cookieExtensibility, expirationTimeString, secretKey);
+            var expectedHash = GenerateHash(cookieExtensibility, expirationTimeString, secretKey);
             if (!expectedHash.Equals(storedHash))
                 return false;
             var expirationTime = DateTimeHelper.GetUnixTimeStampAsDate(expirationTimeString);

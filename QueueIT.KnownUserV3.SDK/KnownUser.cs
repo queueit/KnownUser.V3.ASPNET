@@ -13,10 +13,9 @@ namespace QueueIT.KnownUserV3.SDK
           string queueitToken, CustomerIntegration customerIntegrationInfo,
           string customerId, string secretKey)
         {
-            var configEvaluater = new IntegrationEvaluator();
             if (customerIntegrationInfo == null)
                 throw new ArgumentException("customerIntegrationInfo can not be null.");
-
+            var configEvaluater = new IntegrationEvaluator();
             var matchedConfig = configEvaluater.GetMatchedIntegrationConfig(customerIntegrationInfo, currentUrlWithoutQueueITToken);
             if (matchedConfig == null)
                 return new RequestValidationResult();

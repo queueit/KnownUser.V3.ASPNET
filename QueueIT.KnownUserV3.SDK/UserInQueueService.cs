@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Web;
 using System.Collections.Generic;
-using QueueIT.KnownUserV3.SDK.IntegrationConfig;
 
 namespace QueueIT.KnownUserV3.SDK
 {
@@ -24,18 +23,13 @@ namespace QueueIT.KnownUserV3.SDK
     internal class UserInQueueService : IUserInQueueService
     {
         private readonly IUserInQueueStateRepository _userInQueueStateRepository;
-      
+
 
         public UserInQueueService(
             IUserInQueueStateRepository queueStateRepository)
         {
-           
             this._userInQueueStateRepository = queueStateRepository;
-           
         }
-
-
-
 
 
         public RequestValidationResult ValidateRequest(
@@ -65,7 +59,7 @@ namespace QueueIT.KnownUserV3.SDK
 
             if (queueParmas != null)
             {
-                return GetQueueITTokenValidationResult(targetUrl, config.EventId, config, queueParmas,customerId, secretKey);
+                return GetQueueITTokenValidationResult(targetUrl, config.EventId, config, queueParmas, customerId, secretKey);
             }
             else
             {
@@ -100,8 +94,6 @@ namespace QueueIT.KnownUserV3.SDK
 
             return new RequestValidationResult() { EventId = config.EventId };
         }
-
-
 
         private RequestValidationResult GetVaidationErrorResult(
             string customerId,
@@ -144,9 +136,8 @@ namespace QueueIT.KnownUserV3.SDK
 
 
 
-        string GetQueryString(
+        private string GetQueryString(
             string customerId,
-          
             EventConfig config)
         {
             List<string> queryStringList = new List<string>();
@@ -168,6 +159,7 @@ namespace QueueIT.KnownUserV3.SDK
         {
             this._userInQueueStateRepository.CancelQueueCookie(eventId);
         }
+
         public void ExtendQueueCookie(
             string eventId,
             int cookieValidityMinute,
