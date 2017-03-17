@@ -1,4 +1,4 @@
-﻿using QueueIT.KnownUserV3.SDK.IntegrationConfig;
+using QueueIT.KnownUserV3.SDK.IntegrationConfig;
 using System;
 using System.Collections.Generic;
 using System.IO;
