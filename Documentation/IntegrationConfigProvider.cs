@@ -8,92 +8,58 @@ using System.Web.Script.Serialization;
 
 namespace QueueIT.KnownUserV3.SDK.IntegrationConfigLoader
 {
-
-
-    internal class IntegrationConfigProvider
+    /// <summary>
+    /// This is an example showing how the Integration Configuration can be downloaded from Go Queue-it. 
+    /// It is also deserialized to a CustomerIntegration object and cached in memory for 5 minutes.
+    /// The retry logic will try 5 times with 5 seconds interval and with a 4 second timeout.
+    /// </summary>
+    public static class IntegrationConfigProvider
     {
-        private static readonly Lazy<IntegrationConfigProvider> _instance = new Lazy<IntegrationConfigProvider>(
-            () => new IntegrationConfigProvider());
 
-        private int _downloadTimeoutMS = 4000;
-        private Timer _timer;
-        private readonly object _lockObject = new object();
-        CustomerIntegration _cachedIntegrationConfig;
-        private bool _isInitialized = false;
-        public CustomerIntegration GetCachedIntegrationConfig(string customerId)
+        private const int _downloadTimeoutMS = 4000;
+        private static Timer _timer;
+        private static readonly object _lockObject = new object();
+        static CustomerIntegration _cachedIntegrationConfig;
+        private static bool _isInitialized = false;
+        private static string _customerId;
+        public static CustomerIntegration GetCachedIntegrationConfig(string customerId)
         {
-            if(!this._isInitialized)
+            if(!_isInitialized)
             {
-                this.CustomerId = customerId;
+                _customerId = customerId;
                 lock (_lockObject)
                 {
-                    if (!this._isInitialized)
+                    if (!_isInitialized)
                     {
-                        this.RefreshCache(true);
-                        if (this.Exp != null)
-                            throw this.Exp;
+                        RefreshCache(init:true);
                         _timer = new Timer();
                         _timer.Interval = _RefreshIntervalS * 1000;
                         _timer.AutoReset = false;
                         _timer.Elapsed += TimerElapsed;
                         _timer.Start();
-                        this._isInitialized = true;
+                        _isInitialized = true;
                     }
                 }
             }
-            return this._cachedIntegrationConfig;
+            return _cachedIntegrationConfig;
         }
 
         internal static int _RefreshIntervalS = 5 * 60;
         internal static double _RetryExceptionSleepS = 5;
-        public Exception Exp { get; set; }
-        private string CustomerId { get; set; }
 
-        private IntegrationConfigProvider()
+        private static void TimerElapsed(object sender, ElapsedEventArgs e)
         {
-        }
-        public static IntegrationConfigProvider Instance
-        {
-            get
-            {
-                return _instance.Value;
-            }
-        }
-
-
-        public void Init(string customerId)
-        {
-            this.CustomerId = customerId;
-            lock (_lockObject)
-            {
-                if (_timer == null)
-                {
-                    this.RefreshCache(true);
-                    if (this.Exp != null)
-                        throw this.Exp;
-                    _timer = new Timer();
-                    _timer.Interval = _RefreshIntervalS * 1000;
-                    _timer.AutoReset = false;
-                    _timer.Elapsed += TimerElapsed;
-                    _timer.Start();
-                }
-            }
-        }
-
-
-
-        private void TimerElapsed(object sender, ElapsedEventArgs e)
-        {
-            this.RefreshCache(false);
+            RefreshCache(init:false);
             _timer.Start();
         }
 
-        private void RefreshCache(bool init)
+        private static void RefreshCache(bool init)
         {
             int tryCount = 0;
             while (tryCount < 5)
             {
-                var configUrl = $"https://assets.queue-it.net/{this.CustomerId}/integrationconfig/json/integrationInfo.json";
+                var timeBaseQueryString = (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds.ToString();
+                var configUrl = string.Format("https://assets.queue-it.net/{0}/integrationconfig/json/integrationInfo.json?qr={1}", _customerId, timeBaseQueryString);
                 try
                 {
                     HttpWebRequest request = (HttpWebRequest)WebRequest.Create(configUrl);
@@ -104,16 +70,13 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfigLoader
                             throw new Exception($"It was not sucessful retriving config file status code {response.StatusCode} from {configUrl}");
                         using (StreamReader reader = new StreamReader(response.GetResponseStream()))
                         {
-                            //this.CachedIntegrationConfig = reader.ReadToEnd();
                             JavaScriptSerializer deserializer = new JavaScriptSerializer();
                             var deserialized = deserializer.Deserialize<CustomerIntegration>(reader.ReadToEnd());
                             if (deserialized == null)
                                 throw new Exception("CustomerIntegration is null");
                              _cachedIntegrationConfig = deserialized;
 
-
                         }
-                        this.Exp = null;
                         return;
                     }
                 }
@@ -122,18 +85,15 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfigLoader
                     ++tryCount;
                     if (tryCount >= 5)
                     {
-                        this.Exp = new Exception($"Error in loading config file at {DateTime.UtcNow.ToString("o")}", ex);
+                        //Use your favorit logging framework to log the exceptoin
                         break;
                     }
                     if (!init)
                         System.Threading.Thread.Sleep(TimeSpan.FromSeconds(_RetryExceptionSleepS));
                     else
                         System.Threading.Thread.Sleep(TimeSpan.FromSeconds(0.200 * tryCount));
-
                 }
             }
         }
-
-
     }
 }
