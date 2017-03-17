@@ -26,7 +26,6 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfig
         }
         //sorted list of integrations
         public IEnumerable<IntegrationConfigModel> Integrations { get; set; }
-        public string CustomerId { get; set; }
         public int Version { get; set; }
     }
 
