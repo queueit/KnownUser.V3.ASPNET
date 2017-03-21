@@ -1,0 +1,43 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QueueIT.KnownUserV3.SDK", "QueueIT.KnownUserV3.SDK\QueueIT.KnownUserV3.SDK.csproj", "{D6E1D188-2EA9-4B5A-BCBE-5F361C7BFDBD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QueueIT.KnownUserV3.SDK.Tests", "QueueIT.KnownUserV3.SDK.Tests\QueueIT.KnownUserV3.SDK.Tests.csproj", "{DFFE3967-0844-43CB-930A-25CB57AA0724}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QueueIT.KnownUser3.SDK.Sample", "QueueIT.KnownUserV3.SDK.Sample\QueueIT.KnownUser3.SDK.Sample.csproj", "{5965E79C-8E88-41D7-BC5D-23BA1BA7A30C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentation", "{79208A3F-832D-404E-BD8F-BF30C3093F95}"
+	ProjectSection(SolutionItems) = preProject
+		Documentation\ConfigurationProviderExample.PNG = Documentation\ConfigurationProviderExample.PNG
+		Documentation\KnownUser flow.PNG = Documentation\KnownUser flow.PNG
+		Documentation\QueueITHelpers.cs = Documentation\QueueITHelpers.cs
+		Documentation\README.md = Documentation\README.md
+		README.md = README.md
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D6E1D188-2EA9-4B5A-BCBE-5F361C7BFDBD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D6E1D188-2EA9-4B5A-BCBE-5F361C7BFDBD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D6E1D188-2EA9-4B5A-BCBE-5F361C7BFDBD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D6E1D188-2EA9-4B5A-BCBE-5F361C7BFDBD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DFFE3967-0844-43CB-930A-25CB57AA0724}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DFFE3967-0844-43CB-930A-25CB57AA0724}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DFFE3967-0844-43CB-930A-25CB57AA0724}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DFFE3967-0844-43CB-930A-25CB57AA0724}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5965E79C-8E88-41D7-BC5D-23BA1BA7A30C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5965E79C-8E88-41D7-BC5D-23BA1BA7A30C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5965E79C-8E88-41D7-BC5D-23BA1BA7A30C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5965E79C-8E88-41D7-BC5D-23BA1BA7A30C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
