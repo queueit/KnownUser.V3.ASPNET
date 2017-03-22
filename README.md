@@ -1,4 +1,4 @@
-# Queue-it Security .Net Framework
+# Queue-it KnownUser SDK for ASP.NET (BETA)
 The Queue-it Security Framework is used to ensure that end users cannot bypass the queue by adding a server-side integration to your server. 
 ## Introduction
 When a user is redirected back from the queue to your website, the queue engine can attache a query string parameter (`queueittoken`) containing some information about the user. 
@@ -56,15 +56,15 @@ private void DoValidation()
     try
     {
         var customerId = "Your Queue-it customer ID";
-        var secreteKey = "Your 72 char secrete key as specified in Go Queue-it self-service platform";
+        var secretKey = "Your 72 char secrete key as specified in Go Queue-it self-service platform";
 
-        var queueitToken = HttpContext.Current.Request.QueryString[KnownUser.QueueITTokenKey];
+        var queueitToken = Request.QueryString[KnownUser.QueueITTokenKey];
         var pureUrl = Regex.Replace(Request.Url.ToString(), @"([\?&])(" + KnownUser.QueueITTokenKey + "=[^&]*)", string.Empty, RegexOptions.IgnoreCase);
         var integrationConfig = IntegrationConfigProvider.GetCachedIntegrationConfig(customerId);
   
 
         //Verify if the user has been through the queue
-        var validationResult = KnownUser.ValidateRequestByIntegrationConfig(pureUrl, queueitToken, integrationConfig, customerId, secreteKey);
+        var validationResult = KnownUser.ValidateRequestByIntegrationConfig(pureUrl, queueitToken, integrationConfig, customerId, secretKey);
 
         if (validationResult.DoRedirect)
         {
@@ -88,12 +88,15 @@ private void DoValidation()
 }
 ```
 
+## Installation
+we will provide a NuGet package soon.
+
 ## Alternative Implementation
 If your application server (maybe due to security reasons) is not allowed to do external GET requests, then you have three options:
 
 1. Manually download the configuration file from Queue-it Go self-service portal, save it on your application server and load it from local disk
-2. Use and internal gateway server to download the configuration file and save to application server
-3. Specify the configuration in code without using the Trigger/Action paradime. In this case it is important *only to queue-up page requests* and not requests for resources or AJAX calls. 
+2. Use an internal gateway server to download the configuration file and save to application server
+3. Specify the configuration in code without using the Trigger/Action paradigm. In this case it is important *only to queue-up page requests* and not requests for resources or AJAX calls. 
 This can be done by adding custom filtering logic to Global.asax 
 
 **or** if using asp.net mvc by adding it as an ActionFilter on the page controllers 
@@ -110,38 +113,41 @@ private void DoValidationByLocalEventConfig()
 {
     try
     {
-        var queueitToken = HttpContext.Current.Request.QueryString[KnownUser.QueueITTokenKey];
-        var pureUrl = Regex.Replace(Request.Url.ToString(),
-                                        @"([\?&])(" + KnownUser.QueueITTokenKey + "=[^&]*)",
-                                        string.Empty, RegexOptions.IgnoreCase);
+        var customerId = "Your Queue-it customer ID";
+        var secretKey = "Your 72 char secrete key as specified in Go Queue-it self-service platform";
+
+        var queueitToken = Request.QueryString[KnownUser.QueueITTokenKey];
+        var pureUrl = Regex.Replace(Request.Url.ToString(), @"([\?&])(" + KnownUser.QueueITTokenKey + "=[^&]*)", string.Empty, RegexOptions.IgnoreCase);
         var eventConfig = new EventConfig()
         {
             EventId = "event1", //ID of the queue to use
-            CookieDomain = ".mydomain.com", //Domain name where the Queue-it session cookie should be saved
-            QueueDomain = "myqueue.com", //Domian name of the queue - usually in the format [CustomerId].queue-it.net
-            CookieValidityMinute = 15, //Validity of the Queue-it session cookie 
-            ExtendCookieValidity = false, //Should the Queue-it session cookie validity time be extended each time the validation runs?
-            Culture = "en-US", //Culture of the queue ticket layout in the format specified here: https://msdn.microsoft.com/en-us/library/ee825488(v=cs.20).aspx
-            LayoutName = "MyCustomLayoutName" //Name of the queue ticket layout - e.g. "Default layout by Queue-it"
+            CookieDomain = ".mydomain.com", //Optional - Domain name where the Queue-it session cookie should be saved. Default is to save on the domain of the request
+            QueueDomain = "queue.mydomain.com", //Optional - Domian name of the queue. Default is [CustomerId].queue-it.net
+            CookieValidityMinute = 15, //Optional - Validity of the Queue-it session cookie. Default is 10 minutes
+            ExtendCookieValidity = false, //Optional - Should the Queue-it session cookie validity time be extended each time the validation runs? Default is true.
+            Culture = "en-US", //Optional - Culture of the queue ticket layout in the format specified here: https://msdn.microsoft.com/en-us/library/ee825488(v=cs.20).aspx Default is to use what is specified on Event
+            LayoutName = "MyCustomLayoutName" //Optional - Name of the queue ticket layout - e.g. "Default layout by Queue-it". Default is to use what is specified on the Event
         };
-        var validationResult = KnownUser.ValidateRequestByLocalEventConfig(pureUrl, queueitToken,
-            eventConfig, "customerId","secretKey");
+
+        //Verify if the user has been through the queue
+        var validationResult = KnownUser.ValidateRequestByLocalEventConfig(pureUrl, queueitToken, eventConfig, customerId, secretKey);
 
         if (validationResult.DoRedirect)
         {
+            //Send the user to the queue - either becuase hash was missing or becuase is was invalid
             Response.Redirect(validationResult.RedirectUrl);
         }
         else
         {
-            //Request can continue if you want to remove queueittoken form querystring parameter uncomment below codes
-            if(HttpContext.Current.Request.Url.ToString().Contains(KnownUser.QueueITTokenKey))
+            //Request can continue - we remove queueittoken form querystring parameter to avoid sharing of user specific token
+            if (HttpContext.Current.Request.Url.ToString().Contains(KnownUser.QueueITTokenKey))
                 Response.Redirect(pureUrl);
         }
     }
     catch (Exception ex)
     {
         //There was an error validationg the request
-        //Please log the error and let uses continue 
+        //Please log the error and let user continue 
     }
 }
 ```
