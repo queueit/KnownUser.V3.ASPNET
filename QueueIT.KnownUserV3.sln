@@ -12,7 +12,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentation", "{79208A3F-832D-404E-BD8F-BF30C3093F95}"
 	ProjectSection(SolutionItems) = preProject
 		Documentation\ConfigurationProviderExample.PNG = Documentation\ConfigurationProviderExample.PNG
-		Documentation\KnownUser flow.PNG = Documentation\KnownUser flow.PNG
+		Documentation\KnownUserFlow.png = Documentation\KnownUserFlow.png
 		Documentation\QueueITHelpers.cs = Documentation\QueueITHelpers.cs
 		Documentation\README.md = Documentation\README.md
 		README.md = README.md
