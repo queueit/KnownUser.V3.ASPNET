@@ -11,7 +11,7 @@ The most important fields of the `queueittoken` are:
 
 The high level logic is as follows:
 
-![The KnownUser validation flow](https://github.com/queueit/KnownUser.V3.Net_beta/blob/master/Documentation/KnownUser%20flow.PNG)
+![The KnownUser validation flow](https://github.com/queueit/KnownUser.V3.ASPNET/blob/master/Documentation/KnownUser%20flow.PNG)
 
  1. User requests a page on your server
  2. The validation method sees that the has no Queue-it session cookie and no `queueittoken` and sends him to the correct queue based on the configuration
@@ -34,7 +34,7 @@ When a user enter your website and the URL matches a Trigger-expression the corr
 The Action specifies which queue the users should be send to. 
 In this way you can specify which queue(s) should protect which page(s) on the fly without changing the server-side integration.
 
-This configuration can then be downloaded to your application server as shown in the *[IntegrationConfigProvider](https://github.com/queueit/KnownUser.V3.Net_beta/blob/master/Documentation/IntegrationConfigProvider.cs)* example. 
+This configuration can then be downloaded to your application server as shown in the *[IntegrationConfigProvider](https://github.com/queueit/KnownUser.V3.ASPNET/blob/master/Documentation/IntegrationConfigProvider.cs)* example. 
 The configuration will be downloaded and cached for 5 minutes. 
 
 ### 2. Validate the `queueittoken` and store a session cookie
@@ -47,7 +47,7 @@ If the timestamp or hash is invalid, the user is send back to the queue.
 The KnownUser validation must *only* be done on *page requests*. 
 So, if you add the KnownUser validation logic to a central place like in Global.asax, then be sure that the Triggers only fire on page requests and not on e.g. image or ajax requests.
 
-This example is using the *[IntegrationConfigProvider](https://github.com/queueit/KnownUser.V3.Net_beta/blob/master/Documentation/IntegrationConfigProvider.cs)* to download the queue configuration. 
+This example is using the *[IntegrationConfigProvider](https://github.com/queueit/KnownUser.V3.ASPNET/blob/master/Documentation/IntegrationConfigProvider.cs)* to download the queue configuration. 
 
 The following method is all that is needed to validate that a user has been through the queue:
 ```
