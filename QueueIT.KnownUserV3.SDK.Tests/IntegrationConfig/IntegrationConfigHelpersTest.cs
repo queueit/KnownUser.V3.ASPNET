@@ -174,10 +174,8 @@ namespace QueueIT.KnownUserV3.SDK.Tests.IntegrationConfig
             };
 
             var url = new Uri("http://test.tesdomain.com:8080/test?q=2");
-            var httpRequestMock = MockRepository.GenerateMock<HttpRequestBase>();
-            httpRequestMock.Stub(stub => stub.Cookies).Return(new HttpCookieCollection());
-            testObject.HttpRequest = httpRequestMock;
-            Assert.True(testObject.GetMatchedIntegrationConfig(customerIntegration, url.AbsoluteUri) == null);
+
+            Assert.True(testObject.GetMatchedIntegrationConfig(customerIntegration, url.AbsoluteUri, new HttpCookieCollection()) == null);
         }
         [Fact]
         public void GetMatchedIntegrationConfig_OneTrigger_And_Matched()
@@ -219,10 +217,10 @@ namespace QueueIT.KnownUserV3.SDK.Tests.IntegrationConfig
 
 
             var url = new Uri("http://test.tesdomain.com:8080/test?q=2");
-            var httpRequestMock = MockRepository.GenerateMock<HttpRequestBase>();
-            httpRequestMock.Stub(stub => stub.Cookies).Return(new HttpCookieCollection() { new HttpCookie("c1", "Value1") });
-            testObject.HttpRequest = httpRequestMock;
-            Assert.True(testObject.GetMatchedIntegrationConfig(customerIntegration, url.AbsoluteUri).Name == "integration1");
+       
+
+            Assert.True(testObject.GetMatchedIntegrationConfig(customerIntegration, url.AbsoluteUri,
+                new HttpCookieCollection() { new HttpCookie("c1", "Value1") }).Name == "integration1");
         }
         [Fact]
         public void GetMatchedIntegrationConfig_OneTrigger_Or_NotMatched()
@@ -264,11 +262,11 @@ namespace QueueIT.KnownUserV3.SDK.Tests.IntegrationConfig
 
 
             var url = new Uri("http://test.tesdomain.com:8080/test?q=2");
-            var httpRequestMock = MockRepository.GenerateMock<HttpRequestBase>();
-            httpRequestMock.Stub(stub => stub.Cookies).Return(new HttpCookieCollection() { new HttpCookie("c2", "value1") });
-            testObject.HttpRequest = httpRequestMock;
+ 
 
-            Assert.True(testObject.GetMatchedIntegrationConfig(customerIntegration, url.AbsoluteUri) == null);
+
+            Assert.True(testObject.GetMatchedIntegrationConfig(customerIntegration, url.AbsoluteUri,
+                new HttpCookieCollection() { new HttpCookie("c2", "value1") }) == null);
         }
         [Fact]
         public void GetMatchedIntegrationConfig_OneTrigger_Or_Matched()
@@ -309,9 +307,10 @@ namespace QueueIT.KnownUserV3.SDK.Tests.IntegrationConfig
 
             var url = new Uri("http://test.tesdomain.com:8080/test?q=2");
             var httpRequestMock = MockRepository.GenerateMock<HttpRequestBase>();
-            httpRequestMock.Stub(stub => stub.Cookies).Return(new HttpCookieCollection() { new HttpCookie("c1", "value1") });
-            testObject.HttpRequest = httpRequestMock;
-            Assert.True(testObject.GetMatchedIntegrationConfig(customerIntegration, url.AbsoluteUri).Name == "integration1");
+
+
+            Assert.True(testObject.GetMatchedIntegrationConfig(customerIntegration, url.AbsoluteUri, 
+                new HttpCookieCollection() { new HttpCookie("c1", "value1") }).Name == "integration1");
         }
 
         [Fact]
@@ -360,10 +359,10 @@ namespace QueueIT.KnownUserV3.SDK.Tests.IntegrationConfig
 
             
             var url = new Uri("http://test.tesdomain.com:8080/test?q=2");
-            var httpRequestMock = MockRepository.GenerateMock<HttpRequestBase>();
-            httpRequestMock.Stub(stub => stub.Cookies).Return(new HttpCookieCollection() { });
-            testObject.HttpRequest = httpRequestMock;
-            Assert.True(testObject.GetMatchedIntegrationConfig(customerIntegration, url.AbsoluteUri).Name=="integration1");
+
+
+            Assert.True(testObject.GetMatchedIntegrationConfig(customerIntegration, url.AbsoluteUri,
+                new HttpCookieCollection() { }).Name=="integration1");
         }
 
         [Fact]
@@ -411,10 +410,9 @@ namespace QueueIT.KnownUserV3.SDK.Tests.IntegrationConfig
             };
 
             var url = new Uri("http://test.tesdomain.com:8080/test?q=2");
-            var httpRequestMock = MockRepository.GenerateMock<HttpRequestBase>();
-            httpRequestMock.Stub(stub => stub.Cookies).Return(new HttpCookieCollection() { });
-            testObject.HttpRequest = httpRequestMock;
-            Assert.True(testObject.GetMatchedIntegrationConfig(customerIntegration, url.AbsoluteUri)==null);
+
+
+            Assert.True(testObject.GetMatchedIntegrationConfig(customerIntegration, url.AbsoluteUri, new HttpCookieCollection() { }) ==null);
         }
 
         [Fact]
@@ -489,9 +487,9 @@ namespace QueueIT.KnownUserV3.SDK.Tests.IntegrationConfig
 
             var url = new Uri("http://test.tesdomain.com:8080/test?q=2");
             var httpRequestMock = MockRepository.GenerateMock<HttpRequestBase>();
-            httpRequestMock.Stub(stub => stub.Cookies).Return(new HttpCookieCollection() { new HttpCookie("c1") {  Value="Value1"} });
-            testObject.HttpRequest = httpRequestMock;
-            Assert.False(testObject.GetMatchedIntegrationConfig(customerIntegration, url.AbsoluteUri).Name=="integration2");
+
+            Assert.False(testObject.GetMatchedIntegrationConfig(customerIntegration, url.AbsoluteUri, 
+                new HttpCookieCollection() { new HttpCookie("c1") { Value = "Value1" } }).Name=="integration2");
         }
     }
 }
