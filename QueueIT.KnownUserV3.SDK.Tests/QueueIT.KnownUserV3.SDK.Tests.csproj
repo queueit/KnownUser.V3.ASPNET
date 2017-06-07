@@ -66,6 +66,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="IntegrationConfig\IntegrationConfigHelpersTest.cs" />
+    <Compile Include="KnownUserTest.cs" />
     <Compile Include="UrlParameterProviderTest.cs" />
     <Compile Include="UserInQueueServiceTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
