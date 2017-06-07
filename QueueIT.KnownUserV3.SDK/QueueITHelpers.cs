@@ -12,6 +12,8 @@ namespace QueueIT.KnownUserV3.SDK
         public const string CookieValidityMinuteKey = "cv";
         public const string HashKey = "h";
         public const string EventIdKey = "e";
+        public const string QueueIdKey = "q";
+
         public const char KeyValueSeparatorChar = '_';
         public const char KeyValueSeparatorGroupChar = '~';
 
@@ -63,6 +65,9 @@ namespace QueueIT.KnownUserV3.SDK
                             }
                         case HashKey:
                             result.HashCode = keyValueArr[1];
+                            break;
+                        case QueueIdKey:
+                            result.QueueId = keyValueArr[1];
                             break;
 
                     }
@@ -129,5 +134,6 @@ namespace QueueIT.KnownUserV3.SDK
         public int? CookieValidityMinute { get; set; }
         public string QueueITToken { get; set; }
         public string QueueITTokenWithoutHash { get; set; }
+        public string QueueId { get; set; }
     }
 }

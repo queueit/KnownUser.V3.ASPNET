@@ -40,19 +40,19 @@ namespace QueueIT.KnownUserV3.SDK
             string secretKey
            )
         {
-
-            if (this._userInQueueStateRepository.HasValidState(config.EventId, secretKey))
+            var state = _userInQueueStateRepository.GetState(config.EventId, secretKey);
+            if (state.IsValid)
             {
-                if (this._userInQueueStateRepository.IsStateExtendable(config.EventId)
-                    && config.ExtendCookieValidity)
+                if (state.IsStateExtendable && config.ExtendCookieValidity)
                 {
                     this._userInQueueStateRepository.Store(config.EventId,
+                        state.QueueId,
                         true,
                         config.CookieDomain,
                         config.CookieValidityMinute,
                         secretKey);
                 }
-                return new RequestValidationResult() { EventId = config.EventId };
+                return new RequestValidationResult() { EventId = config.EventId , QueueId = state.QueueId};
             }
 
             QueueUrlParams queueParmas = QueueParameterHelper.ExtractQueueParams(queueitToken);
@@ -87,6 +87,7 @@ namespace QueueIT.KnownUserV3.SDK
 
             this._userInQueueStateRepository.Store(
                 config.EventId,
+                queueParams.QueueId,
                 queueParams.ExtendableCookie,
                 config.CookieDomain,
                 queueParams.CookieValidityMinute ?? config.CookieValidityMinute,

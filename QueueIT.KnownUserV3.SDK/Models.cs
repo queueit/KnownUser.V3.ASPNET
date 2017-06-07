@@ -9,6 +9,7 @@ namespace QueueIT.KnownUserV3.SDK
     public class RequestValidationResult
     {
         public string RedirectUrl { get; set; }
+        public string QueueId { get; set; }
         public bool DoRedirect
         {
             get

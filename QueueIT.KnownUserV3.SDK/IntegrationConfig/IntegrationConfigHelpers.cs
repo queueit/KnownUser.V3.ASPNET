@@ -5,32 +5,16 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfig
 {
     internal class IntegrationEvaluator : IIntegrationEvaluator
     {
-        HttpRequestBase _httpRequest;
-        public HttpRequestBase HttpRequest
-        {
-            get
-            {
-                if (_httpRequest == null)
-                {
-                    this._httpRequest = new HttpRequestWrapper(HttpContext.Current.Request);
-                }
-                return this._httpRequest;
 
-            }
-            set
-            {
-                this._httpRequest = value;
-            }
-        }
 
         public IntegrationConfigModel GetMatchedIntegrationConfig(CustomerIntegration customerIntegration,
-            string currentPageUrl)
+            string currentPageUrl, HttpCookieCollection cookieCollection)
         {
             foreach (var integration in customerIntegration.Integrations)
             {
                 foreach (var trigger in integration.Triggers)
                 {
-                    if (EvaluateTrigger(trigger, currentPageUrl))
+                    if (EvaluateTrigger(trigger, currentPageUrl, cookieCollection))
                     {
                         return integration;
                     }
@@ -39,13 +23,13 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfig
             return null;
         }
 
-        private bool EvaluateTrigger(TriggerModel trigger, string currentPageUrl)
+        private bool EvaluateTrigger(TriggerModel trigger, string currentPageUrl, HttpCookieCollection cookieCollection)
         {
             if (trigger.LogicalOperator == LogicalOperatorType.Or)
             {
                 foreach (var part in trigger.TriggerParts)
                 {
-                    if (EvaluateTriggerPart(part, currentPageUrl))
+                    if (EvaluateTriggerPart(part, currentPageUrl,cookieCollection))
                         return true;
                 }
                 return false;
@@ -54,14 +38,14 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfig
             {
                 foreach (var part in trigger.TriggerParts)
                 {
-                    if (!EvaluateTriggerPart(part, currentPageUrl))
+                    if (!EvaluateTriggerPart(part, currentPageUrl, cookieCollection))
                         return false;
                 }
                 return true;
             }
         }
 
-        private bool EvaluateTriggerPart(TriggerPart triggerPart, string currentPageUrl)
+        private bool EvaluateTriggerPart(TriggerPart triggerPart, string currentPageUrl, HttpCookieCollection cookieCollection)
         {
             switch (triggerPart.ValidatorType)
             {
@@ -69,7 +53,7 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfig
 
                     return UrlValidatorHelper.Evaluate(triggerPart, currentPageUrl);
                 case ValidatorType.CookieValidator:
-                    return CookieValidatorHelper.Evaluate(triggerPart, HttpRequest.Cookies);
+                    return CookieValidatorHelper.Evaluate(triggerPart, cookieCollection);
                 default:
                     return false;
             }
@@ -79,7 +63,7 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfig
     internal interface IIntegrationEvaluator
     {
         IntegrationConfigModel GetMatchedIntegrationConfig(CustomerIntegration customerIntegration,
-             string currentPageUrl);
+             string currentPageUrl, HttpCookieCollection cookieCollection);
     }
 
     internal class UrlValidatorHelper
@@ -149,7 +133,7 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfig
 
         private static string GetCookie(string cookieName, System.Web.HttpCookieCollection cookieCollection)
         {
-            var cookie = cookieCollection.Get(cookieName);
+            var cookie = cookieCollection?.Get(cookieName);
             if (cookie == null)
                 return string.Empty;
             return cookieCollection[cookieName].Value;
