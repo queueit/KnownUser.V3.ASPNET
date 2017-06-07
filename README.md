@@ -1,6 +1,6 @@
 [![NuGet](http://img.shields.io/nuget/v/QueueIT.KnownUserV3.SDK.svg)](https://www.nuget.org/packages/QueueIT.KnownUserV3.SDK/)
 
-# Queue-it KnownUser SDK for ASP.NET 
+# Queue-it KnownUser SDK for ASP.NET (BETA)
 The Queue-it Security Framework is used to ensure that end users cannot bypass the queue by adding a server-side integration to your server. 
 ## Introduction
 When a user is redirected back from the queue to your website, the queue engine can attache a query string parameter (`queueittoken`) containing some information about the user. 
