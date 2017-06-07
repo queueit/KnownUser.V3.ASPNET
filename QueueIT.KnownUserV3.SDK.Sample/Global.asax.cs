@@ -15,19 +15,17 @@ namespace QueueIT.KnownUser3.SDK.Sample
             // All page requests are validated against the KnownUser library to ensure only users that have been through the queue are allowed in
             // This example is using the IntegrationConfigProvider example to download and cache the integration configuration from Queue-it
             // The downloaded integration configuration will make sure that only configured pages are protected
-            if(isQueueItEnabled)
+            if (isQueueItEnabled)
                 DoValidation();  //Default Queue-it integration
-
 
             // This shows an alternative implementation
             // This example is manually specifiying the configuartion to use, using the EventConfig() class
             // Here you also manually need to ensure that only the relevant page requests are validated
             // Also ensure that only page requests (and not e.g. image requests) are validated
-            if (isQueueItEnabled)
-                DoValidationByLocalEventConfig(); //Example of alternative implementation using local event configuration
+            //if (isQueueItEnabled)
+            //    DoValidationByLocalEventConfig(); //Example of alternative implementation using local event configuration
         }
 
-      
         private void DoValidation()
         {
             try
@@ -38,7 +36,7 @@ namespace QueueIT.KnownUser3.SDK.Sample
                 var queueitToken = Request.QueryString[KnownUser.QueueITTokenKey];
                 var pureUrl = Regex.Replace(Request.Url.ToString(), @"([\?&])(" + KnownUser.QueueITTokenKey + "=[^&]*)", string.Empty, RegexOptions.IgnoreCase);
                 var integrationConfig = IntegrationConfigProvider.GetCachedIntegrationConfig(customerId);
-  
+
 
                 //Verify if the user has been through the queue
                 var validationResult = KnownUser.ValidateRequestByIntegrationConfig(pureUrl, queueitToken, integrationConfig, customerId, secretKey);
@@ -51,10 +49,14 @@ namespace QueueIT.KnownUser3.SDK.Sample
                 else
                 {
                     //Request can continue - we remove queueittoken form querystring parameter to avoid sharing of user specific token
-                    if(HttpContext.Current.Request.Url.ToString().Contains(KnownUser.QueueITTokenKey))
+                    if (HttpContext.Current.Request.Url.ToString().Contains(KnownUser.QueueITTokenKey))
                         Response.Redirect(pureUrl);
 
                 }
+            }
+            catch (System.Threading.ThreadAbortException)
+            {
+                //Response.Redirect will raise System.Threading.ThreadAbortException to end the exceution, no need to log the error
             }
             catch (Exception ex)
             {
@@ -99,12 +101,15 @@ namespace QueueIT.KnownUser3.SDK.Sample
                         Response.Redirect(pureUrl);
                 }
             }
+            catch (System.Threading.ThreadAbortException)
+            {
+                //Response.Redirect will raise System.Threading.ThreadAbortException to end the exceution, no need to log the error
+            }
             catch (Exception ex)
             {
                 //There was an error validationg the request
                 //Please log the error and let user continue 
             }
         }
-
     }
 }
