@@ -3,7 +3,7 @@
 # Queue-it KnownUser SDK for ASP.NET
 The Queue-it Security Framework is used to ensure that end users cannot bypass the queue by adding a server-side integration to your server. 
 ## Introduction
-When a user is redirected back from the queue to your website, the queue engine can attache a query string parameter (`queueittoken`) containing some information about the user. 
+When a user is redirected back from the queue to your website, the queue engine can attach a query string parameter (`queueittoken`) containing some information about the user. 
 The most important fields of the `queueittoken` are:
 
  - q - the users unique queue identifier
@@ -33,7 +33,7 @@ To validate that the current user is allowed to enter your website (has been thr
 The recommended way is to use the Go Queue-it self-service portal to setup the configuration. 
 The configuration specifies a set of Triggers and Actions. A Trigger is an expression matching one, more or all URLs on your website. 
 When a user enter your website and the URL matches a Trigger-expression the corresponding Action will be triggered. 
-The Action specifies which queue the users should be send to. 
+The Action specifies which queue the users should be sent to. 
 In this way you can specify which queue(s) should protect which page(s) on the fly without changing the server-side integration.
 
 This configuration can then be downloaded to your application server as shown in the *[IntegrationConfigProvider](https://github.com/queueit/KnownUser.V3.ASPNET/blob/master/Documentation/IntegrationConfigProvider.cs)* example. 
@@ -64,7 +64,6 @@ private void DoValidation()
         var pureUrl = Regex.Replace(Request.Url.ToString(), @"([\?&])(" + KnownUser.QueueITTokenKey + "=[^&]*)", string.Empty, RegexOptions.IgnoreCase);
         var integrationConfig = IntegrationConfigProvider.GetCachedIntegrationConfig(customerId);
   
-
         //Verify if the user has been through the queue
         var validationResult = KnownUser.ValidateRequestByIntegrationConfig(pureUrl, queueitToken, integrationConfig, customerId, secretKey);
 
@@ -78,7 +77,6 @@ private void DoValidation()
             //Request can continue - we remove queueittoken form querystring parameter to avoid sharing of user specific token
             if(HttpContext.Current.Request.Url.ToString().Contains(KnownUser.QueueITTokenKey))
                 Response.Redirect(pureUrl);
-
         }
     }
     catch (Exception ex)
@@ -119,7 +117,7 @@ private void DoValidationByLocalEventConfig()
     try
     {
         var customerId = "Your Queue-it customer ID";
-        var secretKey = "Your 72 char secrete key as specified in Go Queue-it self-service platform";
+        var secretKey = "Your 72 char secret key as specified in Go Queue-it self-service platform";
 
         var queueitToken = Request.QueryString[KnownUser.QueueITTokenKey];
         var pureUrl = Regex.Replace(Request.Url.ToString(), @"([\?&])(" + KnownUser.QueueITTokenKey + "=[^&]*)", string.Empty, RegexOptions.IgnoreCase);
