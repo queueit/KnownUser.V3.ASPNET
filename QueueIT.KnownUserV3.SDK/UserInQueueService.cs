@@ -144,7 +144,7 @@ namespace QueueIT.KnownUserV3.SDK
             List<string> queryStringList = new List<string>();
             queryStringList.Add($"c={HttpUtility.UrlEncode(customerId)}");
             queryStringList.Add($"e={HttpUtility.UrlEncode(config.EventId)}");
-            queryStringList.Add($"ver=v3-{this.GetType().Assembly.GetName().Version.ToString()}");
+            queryStringList.Add($"ver=v3-aspnet-{this.GetType().Assembly.GetName().Version.ToString()}");
             queryStringList.Add($"cver={config.Version.ToString()}");
 
             if (!string.IsNullOrEmpty(config.Culture))
