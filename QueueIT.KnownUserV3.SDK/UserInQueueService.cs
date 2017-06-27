@@ -107,7 +107,7 @@ namespace QueueIT.KnownUserV3.SDK
             var query = GetQueryString(customerId, config) +
                 $"&queueittoken={qParams.QueueITToken}" +
                 $"&ts={DateTimeHelper.GetUnixTimeStampFromDate(DateTime.UtcNow)}" +
-                $"&t={HttpUtility.UrlEncode(targetUrl)}";
+                (!string.IsNullOrEmpty(targetUrl) ? $"&t={HttpUtility.UrlEncode(targetUrl)}" : "");
             var domainAlias = config.QueueDomain;
             if (!domainAlias.EndsWith("/"))
                 domainAlias = domainAlias + "/";
@@ -127,7 +127,7 @@ namespace QueueIT.KnownUserV3.SDK
 
             var redirectUrl = "https://" + config.QueueDomain + "?" +
                 GetQueryString(customerId, config) +
-                     $"&t={HttpUtility.UrlEncode(targetUrl)}";
+                    (!string.IsNullOrEmpty(targetUrl) ? $"&t={HttpUtility.UrlEncode(targetUrl)}" : "");
             return new RequestValidationResult()
             {
                 RedirectUrl = redirectUrl,
