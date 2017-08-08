@@ -62,6 +62,9 @@ private void DoValidation()
 
         var queueitToken = Request.QueryString[KnownUser.QueueITTokenKey];
         var pureUrl = Regex.Replace(Request.Url.ToString(), @"([\?&])(" + KnownUser.QueueITTokenKey + "=[^&]*)", string.Empty, RegexOptions.IgnoreCase);
+        // The pureUrl is used to match Triggers and as the Target url (where to return the users to)
+        // It is therefor important that the pureUrl is exactly the url of the users browsers. So if your webserver is 
+        // e.g. behind a load balancer that modifies the host name or port, reformat the pureUrl before proceeding
         var integrationConfig = IntegrationConfigProvider.GetCachedIntegrationConfig(customerId);
   
         //Verify if the user has been through the queue
