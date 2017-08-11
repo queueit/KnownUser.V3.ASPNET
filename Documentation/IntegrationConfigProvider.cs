@@ -1,4 +1,4 @@
-using QueueIT.KnownUserV3.SDK.IntegrationConfig;
+﻿using QueueIT.KnownUserV3.SDK.IntegrationConfig;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -17,6 +17,8 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfigLoader
     {
 
         private const int _downloadTimeoutMS = 4000;
+        internal static int _RefreshIntervalS = 5 * 60;
+        internal static double _RetryExceptionSleepS = 5;
         private static Timer _timer;
         private static readonly object _lockObject = new object();
         static CustomerIntegration _cachedIntegrationConfig;
@@ -44,9 +46,7 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfigLoader
             return _cachedIntegrationConfig;
         }
 
-        internal static int _RefreshIntervalS = 5 * 60;
-        internal static double _RetryExceptionSleepS = 5;
-
+   
         private static void TimerElapsed(object sender, ElapsedEventArgs e)
         {
             RefreshCache(init:false);
@@ -59,7 +59,7 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfigLoader
             while (tryCount < 5)
             {
                 var timeBaseQueryString = (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds.ToString();
-                var configUrl = string.Format("https://assets.queue-it.net/{0}/integrationconfig/json/integrationInfo.json?qr={1}", _customerId, timeBaseQueryString);
+                var configUrl = string.Format("https://{0}.queue-it.net/status/integrationconfig/{0}?qr={1}", _customerId, timeBaseQueryString);
                 try
                 {
                     HttpWebRequest request = (HttpWebRequest)WebRequest.Create(configUrl);
