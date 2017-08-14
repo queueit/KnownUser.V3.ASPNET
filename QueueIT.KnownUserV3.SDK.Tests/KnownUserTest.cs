@@ -1,12 +1,36 @@
 ﻿using QueueIT.KnownUserV3.SDK.IntegrationConfig;
 using System;
 using System.Collections.Generic;
+using System.Web;
 using Xunit;
 
 namespace QueueIT.KnownUserV3.SDK.Tests
 {
     public class KnowUserTest
     {
+        class MockHttpRequest : HttpRequestBase
+        {
+            public HttpCookieCollection CookiesValue { get; set; }
+            public string UserAgentValue { get; set; }
+            public override string UserAgent
+            {
+                get
+                {
+                    return UserAgentValue;
+                }
+            }
+            public override HttpCookieCollection Cookies => this.CookiesValue;
+        }
+        class HttpContextMock : HttpContextBase
+        {
+            public MockHttpRequest MockRequest { get; set; }
+            public override HttpRequestBase Request {
+                get
+                {
+                    return MockRequest;
+                }
+            }
+        }
         class UserInQueueServiceMock : IUserInQueueService
         {
             public List<List<string>> validateRequestCalls = new List<List<string>>();
@@ -421,17 +445,24 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             UserInQueueServiceMock mock = new UserInQueueServiceMock();
             KnownUser._UserInQueueService = (mock);
 
-            TriggerPart triggerPart = new TriggerPart();
-            triggerPart.Operator = "Contains";
-            triggerPart.ValueToCompare = "event1";
-            triggerPart.UrlPart = "PageUrl";
-            triggerPart.ValidatorType = "UrlValidator";
-            triggerPart.IsNegative = false;
-            triggerPart.IsIgnoreCase = true;
+            TriggerPart triggerPart1 = new TriggerPart();
+            triggerPart1.Operator = "Contains";
+            triggerPart1.ValueToCompare = "event1";
+            triggerPart1.UrlPart = "PageUrl";
+            triggerPart1.ValidatorType = "UrlValidator";
+            triggerPart1.IsNegative = false;
+            triggerPart1.IsIgnoreCase = true;
+
+            TriggerPart triggerPart2 = new TriggerPart();
+            triggerPart2.Operator = "Contains";
+            triggerPart2.ValueToCompare = "googlebot";
+            triggerPart2.ValidatorType = "UserAgentValidator";
+            triggerPart2.IsNegative = false;
+            triggerPart2.IsIgnoreCase = false;
 
             TriggerModel trigger = new TriggerModel();
             trigger.LogicalOperator = "And";
-            trigger.TriggerParts = new TriggerPart[] { triggerPart };
+            trigger.TriggerParts = new TriggerPart[] { triggerPart1, triggerPart2 };
 
             IntegrationConfigModel config = new IntegrationConfigModel();
             config.Name = "event1action";
@@ -450,7 +481,8 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             CustomerIntegration customerIntegration = new CustomerIntegration();
             customerIntegration.Integrations = new IntegrationConfigModel[] { config };
             customerIntegration.Version = 3;
-
+            var httpContextMock = new HttpContextMock() { MockRequest = new MockHttpRequest() { UserAgentValue = "googlebot", CookiesValue= new HttpCookieCollection()} };
+             KnownUser._HttpContextBase = httpContextMock;
             // Act
             KnownUser.ValidateRequestByIntegrationConfig("http://test.com?event1=true", "queueitToken", customerIntegration, "customerId", "secretKey");
 
@@ -461,6 +493,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             Assert.Equal(".test.com:Christmas Layout by Queue-it:da-DK:event1:knownusertest.queue-it.net:true:20:3", mock.validateRequestCalls[0][2]);
             Assert.Equal("customerId", mock.validateRequestCalls[0][3]);
             Assert.Equal("secretKey", mock.validateRequestCalls[0][4]);
+            KnownUser._HttpContextBase = null;
         }
 
         [Fact]

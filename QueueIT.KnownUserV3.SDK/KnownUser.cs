@@ -17,13 +17,15 @@ namespace QueueIT.KnownUserV3.SDK
                 throw new ArgumentException("currentUrlWithoutQueueITToken can not be null or empty.");
             if (customerIntegrationInfo == null)
                 throw new ArgumentException("customerIntegrationInfo can not be null.");
-            
+
             var configEvaluater = new IntegrationEvaluator();
 
             var matchedConfig = configEvaluater.GetMatchedIntegrationConfig(
                 customerIntegrationInfo,
                 currentUrlWithoutQueueITToken,
-                GetHttpContextBase()?.Request?.Cookies);
+                GetHttpContextBase()?.Request?.Cookies,
+                GetHttpContextBase()?.Request?.UserAgent ?? string.Empty
+                );
 
             if (matchedConfig == null)
                 return new RequestValidationResult();
@@ -83,7 +85,7 @@ namespace QueueIT.KnownUserV3.SDK
         {
             if (string.IsNullOrEmpty(eventId))
                 throw new ArgumentException("eventId can not be null or empty.");
-            
+
             var userInQueueService = GetUserInQueueService();
             userInQueueService.CancelQueueCookie(eventId);
         }
@@ -97,7 +99,7 @@ namespace QueueIT.KnownUserV3.SDK
                 throw new ArgumentException("cookieValidityMinute should be greater than 0.");
             if (string.IsNullOrEmpty(secretKey))
                 throw new ArgumentException("secretKey can not be null or empty.");
-            
+
             var userInQueueService = GetUserInQueueService();
             userInQueueService.ExtendQueueCookie(eventId, cookieValidityMinute, secretKey);
         }

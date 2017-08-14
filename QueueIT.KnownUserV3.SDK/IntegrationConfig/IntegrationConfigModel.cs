@@ -56,6 +56,7 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfig
     {
         public const string UrlValidator = "UrlValidator";
         public const string CookieValidator = "CookieValidator";
+        public const string UserAgentValidator = "UserAgentValidator";
     }
 
     internal static class UrlPartType

@@ -136,6 +136,41 @@ namespace QueueIT.KnownUserV3.SDK.Tests.IntegrationConfig
     }
 
 
+    public class UserAgentValidatorHelperTest
+    {
+        [Fact]
+        public void Evaluate_Test()
+        {
+            var triggerPart = new TriggerPart()
+            {
+                Operator = ComparisonOperatorType.Contains,
+                ValueToCompare = "googlebot"
+            };
+            Assert.False(UserAgentValidatorHelper.Evaluate(triggerPart, "Googlebot sample useraagent"));
+
+            triggerPart.ValueToCompare = "googlebot";
+            triggerPart.Operator = ComparisonOperatorType.EqualS;
+            triggerPart.IsIgnoreCase = true;
+            triggerPart.IsNegative = true;
+            Assert.True(UserAgentValidatorHelper.Evaluate(triggerPart, "oglebot sample useraagent"));
+
+            
+            triggerPart.ValueToCompare = "googlebot";
+            triggerPart.Operator = ComparisonOperatorType.Contains;
+            triggerPart.IsIgnoreCase = false;
+            triggerPart.IsNegative = true;
+            Assert.False(UserAgentValidatorHelper.Evaluate(triggerPart, "googlebot"));
+
+
+            triggerPart.ValueToCompare = "googlebot";
+            triggerPart.IsIgnoreCase = true;
+            triggerPart.IsNegative = false;
+            triggerPart.Operator = ComparisonOperatorType.Contains;
+            Assert.True(UserAgentValidatorHelper.Evaluate(triggerPart, "Googlebot"));
+
+        }
+    }
+
 
     public class IntegrationEvaluatorTest
     {
@@ -152,7 +187,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests.IntegrationConfig
 
                          Triggers = new List<TriggerModel>() {
                                                 new TriggerModel() {
-                                                    LogicalOperator = LogicalOperatorType.And,
+                                                    LogicalOperator = LogicalOperatorType.Or,
                                                     TriggerParts = new List<TriggerPart>() {
                                                             new TriggerPart() {
                                                                 CookieName ="c1",
@@ -161,8 +196,8 @@ namespace QueueIT.KnownUserV3.SDK.Tests.IntegrationConfig
                                                                 ValidatorType= ValidatorType.CookieValidator
                                                             },
                                                             new TriggerPart() {
-                                                                UrlPart = UrlPartType.PageUrl,
-                                                                ValidatorType= ValidatorType.UrlValidator,
+                                                                
+                                                                ValidatorType= ValidatorType.UserAgentValidator,
                                                                 ValueToCompare= "test",
                                                                 Operator= ComparisonOperatorType.Contains
                                                                 }
@@ -175,7 +210,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests.IntegrationConfig
 
             var url = new Uri("http://test.tesdomain.com:8080/test?q=2");
 
-            Assert.True(testObject.GetMatchedIntegrationConfig(customerIntegration, url.AbsoluteUri, new HttpCookieCollection()) == null);
+            Assert.True(testObject.GetMatchedIntegrationConfig(customerIntegration, url.AbsoluteUri, new HttpCookieCollection(),string.Empty) == null);
         }
         [Fact]
         public void GetMatchedIntegrationConfig_OneTrigger_And_Matched()
@@ -220,7 +255,60 @@ namespace QueueIT.KnownUserV3.SDK.Tests.IntegrationConfig
        
 
             Assert.True(testObject.GetMatchedIntegrationConfig(customerIntegration, url.AbsoluteUri,
-                new HttpCookieCollection() { new HttpCookie("c1", "Value1") }).Name == "integration1");
+                new HttpCookieCollection() { new HttpCookie("c1", "Value1") }, string.Empty).Name == "integration1");
+        }
+
+        [Fact]
+        public void GetMatchedIntegrationConfig_OneTrigger_And_NotMatched_UserAgent()
+        {
+            var testObject = new IntegrationEvaluator();
+
+            var customerIntegration = new CustomerIntegration()
+            {
+
+                Integrations = new List<IntegrationConfigModel> {
+                                             new IntegrationConfigModel()
+                                             {
+                                                 Name= "integration1",
+                                                 Triggers = new List<TriggerModel>() {
+                                                            new TriggerModel() {
+                                                                LogicalOperator = LogicalOperatorType.And,
+                                                                TriggerParts = new List<TriggerPart>() {
+                                                                    new TriggerPart() {
+                                                                        CookieName ="c1",
+                                                                        Operator = ComparisonOperatorType.EqualS,
+                                                                        IsIgnoreCase= true,
+                                                                        ValueToCompare ="value1",
+                                                                        ValidatorType= ValidatorType.CookieValidator
+                                                                    },
+                                                                    new TriggerPart() {
+                                                                        UrlPart = UrlPartType.PageUrl,
+                                                                        ValidatorType= ValidatorType.UrlValidator,
+                                                                        ValueToCompare= "test",
+                                                                        Operator= ComparisonOperatorType.Contains
+                                                                        },
+                                                                   new TriggerPart() {
+                                                                        ValidatorType= ValidatorType.UserAgentValidator,
+                                                                        ValueToCompare= "Googlebot",
+                                                                        Operator= ComparisonOperatorType.Contains,
+                                                                        IsIgnoreCase= true,
+                                                                        IsNegative= true
+                                                                        }
+
+                                                                }
+                                                    }
+                                              }
+                                            }
+
+            }
+            };
+
+
+            var url = new Uri("http://test.tesdomain.com:8080/test?q=2");
+
+
+            Assert.True(testObject.GetMatchedIntegrationConfig(customerIntegration, url.AbsoluteUri,
+                new HttpCookieCollection() { new HttpCookie("c1", "Value1") }, "bot.html google.com googlebot test")==null);
         }
         [Fact]
         public void GetMatchedIntegrationConfig_OneTrigger_Or_NotMatched()
@@ -266,7 +354,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests.IntegrationConfig
 
 
             Assert.True(testObject.GetMatchedIntegrationConfig(customerIntegration, url.AbsoluteUri,
-                new HttpCookieCollection() { new HttpCookie("c2", "value1") }) == null);
+                new HttpCookieCollection() { new HttpCookie("c2", "value1") },  string.Empty) == null);
         }
         [Fact]
         public void GetMatchedIntegrationConfig_OneTrigger_Or_Matched()
@@ -310,7 +398,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests.IntegrationConfig
 
 
             Assert.True(testObject.GetMatchedIntegrationConfig(customerIntegration, url.AbsoluteUri, 
-                new HttpCookieCollection() { new HttpCookie("c1", "value1") }).Name == "integration1");
+                new HttpCookieCollection() { new HttpCookie("c1", "value1") }, string.Empty).Name == "integration1");
         }
 
         [Fact]
@@ -362,7 +450,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests.IntegrationConfig
 
 
             Assert.True(testObject.GetMatchedIntegrationConfig(customerIntegration, url.AbsoluteUri,
-                new HttpCookieCollection() { }).Name=="integration1");
+                new HttpCookieCollection() { }, string.Empty).Name=="integration1", string.Empty);
         }
 
         [Fact]
@@ -412,7 +500,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests.IntegrationConfig
             var url = new Uri("http://test.tesdomain.com:8080/test?q=2");
 
 
-            Assert.True(testObject.GetMatchedIntegrationConfig(customerIntegration, url.AbsoluteUri, new HttpCookieCollection() { }) ==null);
+            Assert.True(testObject.GetMatchedIntegrationConfig(customerIntegration, url.AbsoluteUri, new HttpCookieCollection() { }, string.Empty) ==null);
         }
 
         [Fact]
@@ -489,7 +577,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests.IntegrationConfig
             var httpRequestMock = MockRepository.GenerateMock<HttpRequestBase>();
 
             Assert.False(testObject.GetMatchedIntegrationConfig(customerIntegration, url.AbsoluteUri, 
-                new HttpCookieCollection() { new HttpCookie("c1") { Value = "Value1" } }).Name=="integration2");
+                new HttpCookieCollection() { new HttpCookie("c1") { Value = "Value1" } }, string.Empty).Name=="integration2");
         }
     }
 }

@@ -5,16 +5,14 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfig
 {
     internal class IntegrationEvaluator : IIntegrationEvaluator
     {
-
-
         public IntegrationConfigModel GetMatchedIntegrationConfig(CustomerIntegration customerIntegration,
-            string currentPageUrl, HttpCookieCollection cookieCollection)
+            string currentPageUrl, HttpCookieCollection cookieCollection, string userAgent)
         {
             foreach (var integration in customerIntegration.Integrations)
             {
                 foreach (var trigger in integration.Triggers)
                 {
-                    if (EvaluateTrigger(trigger, currentPageUrl, cookieCollection))
+                    if (EvaluateTrigger(trigger, currentPageUrl, cookieCollection,userAgent))
                     {
                         return integration;
                     }
@@ -23,13 +21,14 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfig
             return null;
         }
 
-        private bool EvaluateTrigger(TriggerModel trigger, string currentPageUrl, HttpCookieCollection cookieCollection)
+        private bool EvaluateTrigger(TriggerModel trigger, string currentPageUrl, 
+            HttpCookieCollection cookieCollection, string userAgent)
         {
             if (trigger.LogicalOperator == LogicalOperatorType.Or)
             {
                 foreach (var part in trigger.TriggerParts)
                 {
-                    if (EvaluateTriggerPart(part, currentPageUrl,cookieCollection))
+                    if (EvaluateTriggerPart(part, currentPageUrl,cookieCollection, userAgent))
                         return true;
                 }
                 return false;
@@ -38,22 +37,24 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfig
             {
                 foreach (var part in trigger.TriggerParts)
                 {
-                    if (!EvaluateTriggerPart(part, currentPageUrl, cookieCollection))
+                    if (!EvaluateTriggerPart(part, currentPageUrl, cookieCollection, userAgent))
                         return false;
                 }
                 return true;
             }
         }
 
-        private bool EvaluateTriggerPart(TriggerPart triggerPart, string currentPageUrl, HttpCookieCollection cookieCollection)
+        private bool EvaluateTriggerPart(TriggerPart triggerPart, string currentPageUrl,
+            HttpCookieCollection cookieCollection, string userAgent)
         {
             switch (triggerPart.ValidatorType)
             {
                 case ValidatorType.UrlValidator:
-
                     return UrlValidatorHelper.Evaluate(triggerPart, currentPageUrl);
                 case ValidatorType.CookieValidator:
                     return CookieValidatorHelper.Evaluate(triggerPart, cookieCollection);
+                case ValidatorType.UserAgentValidator:
+                    return UserAgentValidatorHelper.Evaluate(triggerPart, userAgent);
                 default:
                     return false;
             }
@@ -63,7 +64,7 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfig
     internal interface IIntegrationEvaluator
     {
         IntegrationConfigModel GetMatchedIntegrationConfig(CustomerIntegration customerIntegration,
-             string currentPageUrl, HttpCookieCollection cookieCollection);
+             string currentPageUrl, HttpCookieCollection cookieCollection, string userAgent);
     }
 
     internal class UrlValidatorHelper
@@ -137,6 +138,18 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfig
             if (cookie == null)
                 return string.Empty;
             return cookieCollection[cookieName].Value;
+        }
+    }
+
+    internal static class UserAgentValidatorHelper
+    {
+        public static bool Evaluate(TriggerPart triggerPart, string userAgent)
+        {
+            return ComparisonOperatorHelper.Evaluate(triggerPart.Operator,
+                triggerPart.IsNegative,
+                triggerPart.IsIgnoreCase,
+                userAgent,
+                triggerPart.ValueToCompare);
         }
     }
 
