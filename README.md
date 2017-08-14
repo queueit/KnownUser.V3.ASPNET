@@ -91,11 +91,11 @@ private void DoValidation()
 }
 ```
 
-[//]: ## Installation
+## Installation
 
-[//]: Install using NuGet.
+Install using NuGet.
 
-    [//]: PM> Install-Package QueueIT.KnownUserV3.SDK
+    Not available
 
 ## Alternative Implementation
 If your application server (maybe due to security reasons) is not allowed to do external GET requests, then you have three options:
