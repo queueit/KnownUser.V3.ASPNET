@@ -28,16 +28,16 @@ namespace QueueIT.KnownUserV3.SDK.Tests
                 ExtendCookieValidity = false
             };
 
-            cookieProviderMock.Stub(stub => stub.GetState("",""))
-                .IgnoreArguments().Return(new StateInfo(true,queueId,true));
-         
+            cookieProviderMock.Stub(stub => stub.GetState("", ""))
+                .IgnoreArguments().Return(new StateInfo(true, queueId, true));
+
 
             UserInQueueService testObject = new UserInQueueService(cookieProviderMock);
 
-            var result = testObject.ValidateRequest("url", "token",config,"testCustomer", "key");
+            var result = testObject.ValidateRequest("url", "token", config, "testCustomer", "key");
             Assert.True(!result.DoRedirect);
-            Assert.True(result.QueueId ==queueId);
-            cookieProviderMock.AssertWasNotCalled(stub => stub.Store("",queueId, true, "", 0, ""),
+            Assert.True(result.QueueId == queueId);
+            cookieProviderMock.AssertWasNotCalled(stub => stub.Store("", queueId, true, "", 0, ""),
                    options => options.IgnoreArguments());
             Assert.True(config.EventId == result.EventId);
 
@@ -105,11 +105,11 @@ namespace QueueIT.KnownUserV3.SDK.Tests
 
             UserInQueueService testObject = new UserInQueueService(cookieProviderMock);
 
-            var result = testObject.ValidateRequest("url", "token",config,"testCustomer",customerKey);
+            var result = testObject.ValidateRequest("url", "token", config, "testCustomer", customerKey);
             Assert.True(result.QueueId == queueId);
             Assert.True(!result.DoRedirect);
             cookieProviderMock.AssertWasNotCalled(stub =>
-                                stub.Store(null, null,false, null, 0, null), options => options.IgnoreArguments());
+                                stub.Store(null, null, false, null, 0, null), options => options.IgnoreArguments());
             Assert.True(config.EventId == result.EventId);
         }
 
@@ -128,12 +128,12 @@ namespace QueueIT.KnownUserV3.SDK.Tests
                 QueueDomain = "testDomain.com",
                 CookieValidityMinute = 10,
                 ExtendCookieValidity = false,
-                Version= 100
+                Version = 100
             };
             var customerKey = "4e1db821-a825-49da-acd0-5d376f2068db";
             var queueId = "iopdb821-a825-49da-acd0-5d376f2068db";
 
-            cookieProviderMock.Stub(stub => stub.GetState("", "")).IgnoreArguments().Return(new StateInfo(false,"",false));
+            cookieProviderMock.Stub(stub => stub.GetState("", "")).IgnoreArguments().Return(new StateInfo(false, "", false));
             string hash = "";
 
             var queueitToken = QueueITTokenGenerator.GenerateToken(
@@ -142,7 +142,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests
                                   queueId,
                                   false,
                                   20,
-                               
+
                                   customerKey,
                                   out hash
 
@@ -168,7 +168,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             var redirectUrl = regex.Replace(result.RedirectUrl, "");
             Assert.True(redirectUrl.ToUpper() == expectedErrorUrl.ToUpper());
             Assert.True(config.EventId == result.EventId);
-            cookieProviderMock.AssertWasNotCalled(stub => stub.Store("","", true, "", 0, ""),
+            cookieProviderMock.AssertWasNotCalled(stub => stub.Store("", "", true, "", 0, ""),
                 options => options.IgnoreArguments());
 
         }
@@ -184,7 +184,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests
                 QueueDomain = "testDomain.com",
                 CookieValidityMinute = 10,
                 ExtendCookieValidity = false,
-                Version= 100
+                Version = 100
             };
             var customerKey = "4e1db821-a825-49da-acd0-5d376f2068db";
             var queueId = "iopdb821-a825-49da-acd0-5d376f2068db";
@@ -208,13 +208,13 @@ namespace QueueIT.KnownUserV3.SDK.Tests
                 $"&ver=v3-aspnet-{knownUserVersion}"
                 + $"&cver=100"
                 + $"&queueittoken={queueitToken}"
-                
+
                 + $"&t={HttpUtility.UrlEncode(targetUrl)}";
 
 
             UserInQueueService testObject = new UserInQueueService(cookieProviderMock);
 
-            var result = testObject.ValidateRequest(targetUrl, queueitToken,config,"testCustomer", customerKey);
+            var result = testObject.ValidateRequest(targetUrl, queueitToken, config, "testCustomer", customerKey);
             Assert.True(result.DoRedirect);
             var regex = new Regex("&ts=[^&]*");
             var match = regex.Match(result.RedirectUrl);
@@ -223,7 +223,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             var redirectUrl = regex.Replace(result.RedirectUrl, "");
             Assert.True(redirectUrl.ToUpper() == expectedErrorUrl.ToUpper());
             Assert.True(config.EventId == result.EventId);
-            cookieProviderMock.AssertWasNotCalled(stub => stub.Store("","", true, "", 0, ""),
+            cookieProviderMock.AssertWasNotCalled(stub => stub.Store("", "", true, "", 0, ""),
                 options => options.IgnoreArguments());
 
         }
@@ -237,7 +237,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests
                 QueueDomain = "testDomain.com",
                 CookieValidityMinute = 10,
                 ExtendCookieValidity = false,
-                Version= 10
+                Version = 10
 
             };
             var customerKey = "4e1db821-a825-49da-acd0-5d376f2068db";
@@ -258,14 +258,14 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             var targetUrl = "http://test.test.com?b=h";
             var knownUserVersion = typeof(UserInQueueService).Assembly.GetName().Version.ToString();//queryStringList.Add($"ver=c{}");
             var expectedErrorUrl = $"https://testDomain.com/error/eventid?c=testCustomer&e=e2" +
-                $"&ver=v3-aspnet-{knownUserVersion}"+ "&cver=10"
+                $"&ver=v3-aspnet-{knownUserVersion}" + "&cver=10"
                 + $"&queueittoken={queueitToken}"
                 + $"&t={HttpUtility.UrlEncode(targetUrl)}";
 
 
             UserInQueueService testObject = new UserInQueueService(cookieProviderMock);
 
-            var result = testObject.ValidateRequest(targetUrl, queueitToken,config,"testCustomer", customerKey);
+            var result = testObject.ValidateRequest(targetUrl, queueitToken, config, "testCustomer", customerKey);
             Assert.True(result.DoRedirect);
             var regex = new Regex("&ts=[^&]*");
             var match = regex.Match(result.RedirectUrl);
@@ -275,7 +275,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             var redirectUrl = regex.Replace(result.RedirectUrl, "");
             Assert.True(redirectUrl.ToUpper() == expectedErrorUrl.ToUpper());
             Assert.True(config.EventId == result.EventId);
-            cookieProviderMock.AssertWasNotCalled(stub => stub.Store("","", true, "", 0, ""),
+            cookieProviderMock.AssertWasNotCalled(stub => stub.Store("", "", true, "", 0, ""),
                 options => options.IgnoreArguments());
 
         }
@@ -312,7 +312,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             var targetUrl = "http://test.test.com?b=h";
             UserInQueueService testObject = new UserInQueueService(cookieProviderMock);
 
-            var result = testObject.ValidateRequest(targetUrl, queueitToken,config,"testCustomer", customerKey);
+            var result = testObject.ValidateRequest(targetUrl, queueitToken, config, "testCustomer", customerKey);
             Assert.True(!result.DoRedirect);
 
             cookieProviderMock.AssertWasCalled(stub => stub.Store(
@@ -355,7 +355,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests
 
             UserInQueueService testObject = new UserInQueueService(cookieProviderMock);
 
-            var result = testObject.ValidateRequest(targetUrl, queueitToken,config,"testCustomer", customerKey);
+            var result = testObject.ValidateRequest(targetUrl, queueitToken, config, "testCustomer", customerKey);
             Assert.True(!result.DoRedirect);
 
             cookieProviderMock.AssertWasCalled(stub => stub.Store(
@@ -386,7 +386,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests
                 ExtendCookieValidity = false,
                 Culture = null,
                 LayoutName = "testlayout",
-                Version= 10
+                Version = 10
 
             };
 
@@ -397,18 +397,18 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             UserInQueueService testObject = new UserInQueueService(cookieProviderMock);
             var targetUrl = "http://test.test.com?b=h";
             var knownUserVersion = typeof(UserInQueueService).Assembly.GetName().Version.ToString();//queryStringList.Add($"ver=c{}");
-   
+
             var expectedUrl = $"https://testDomain.com?c=testCustomer&e=e1" +
              $"&ver=v3-aspnet-{knownUserVersion}" +
              $"&cver=10" +
              $"&l={config.LayoutName}" +
              $"&t={HttpUtility.UrlEncode(targetUrl)}";
-            var result = testObject.ValidateRequest(targetUrl,"",config,"testCustomer", "key");
+            var result = testObject.ValidateRequest(targetUrl, "", config, "testCustomer", "key");
 
             Assert.True(result.DoRedirect);
             Assert.True(result.RedirectUrl.ToUpper() == expectedUrl.ToUpper());
             cookieProviderMock.AssertWasNotCalled(stub =>
-                                stub.Store(null,null, true, null, 0, null), options => options.IgnoreArguments());
+                                stub.Store(null, null, true, null, 0, null), options => options.IgnoreArguments());
             Assert.True(config.EventId == result.EventId);
 
         }
@@ -485,9 +485,9 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             Assert.True(result.DoRedirect);
             Assert.True(result.RedirectUrl.StartsWith($"https://testDomain.com/error/hash?c=testCustomer&e=e1&ver=v3-aspnet-{knownUserVersion}&cver=10&l=testlayout&queueittoken=ts_sasa~cv_adsasa~ce_falwwwse~q_944c1f44-60dd-4e37-aabc-f3e4bb1c8895&"));
             cookieProviderMock.AssertWasNotCalled(stub =>
-                                stub.Store(null,null, true, null, 0, null), options => options.IgnoreArguments());
+                                stub.Store(null, null, true, null, 0, null), options => options.IgnoreArguments());
             Assert.True(config.EventId == result.EventId);
-            cookieProviderMock.AssertWasNotCalled(stub => stub.Store("", null,true, "", 0, ""),
+            cookieProviderMock.AssertWasNotCalled(stub => stub.Store("", null, true, "", 0, ""),
                 options => options.IgnoreArguments());
 
         }
@@ -502,9 +502,10 @@ namespace QueueIT.KnownUserV3.SDK.Tests
                     string queueId,
                     bool extendableCookie,
                     int? cookieValidityMinute,
-                 
+
                     string secretKey,
-                    out string hash
+                    out string hash,
+                    string redirectType = null
             )
         {
             var paramList = new List<string>();
@@ -514,6 +515,8 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             paramList.Add(QueueParameterHelper.EventIdKey + QueueParameterHelper.KeyValueSeparatorChar + eventId);
             paramList.Add(QueueParameterHelper.ExtendableCookieKey + QueueParameterHelper.KeyValueSeparatorChar + extendableCookie);
             paramList.Add(QueueParameterHelper.QueueIdKey + QueueParameterHelper.KeyValueSeparatorChar + queueId);
+            if (redirectType != null)
+                paramList.Add(QueueParameterHelper.RedirectTypeKey + QueueParameterHelper.KeyValueSeparatorChar + redirectType);
 
 
 

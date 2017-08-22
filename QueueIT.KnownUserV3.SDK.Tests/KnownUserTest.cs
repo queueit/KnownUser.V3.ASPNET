@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Web;
 using Xunit;
+using System.Collections.Specialized;
 
 namespace QueueIT.KnownUserV3.SDK.Tests
 {
@@ -10,8 +11,14 @@ namespace QueueIT.KnownUserV3.SDK.Tests
     {
         class MockHttpRequest : HttpRequestBase
         {
+            public MockHttpRequest()
+            {
+                this.QueryStringValue = new NameValueCollection();
+            }
             public HttpCookieCollection CookiesValue { get; set; }
             public string UserAgentValue { get; set; }
+            public NameValueCollection QueryStringValue { get; set; }
+            public Uri UrlValue { get; set; }
             public override string UserAgent
             {
                 get
@@ -20,14 +27,30 @@ namespace QueueIT.KnownUserV3.SDK.Tests
                 }
             }
             public override HttpCookieCollection Cookies => this.CookiesValue;
+            public override NameValueCollection QueryString => QueryStringValue;
+            public override Uri Url => UrlValue;
+        }
+        class MockHttpResponse : HttpResponseBase
+        {
+            public HttpCookieCollection CookiesValue { get; set; }
+            public override HttpCookieCollection Cookies => this.CookiesValue;
         }
         class HttpContextMock : HttpContextBase
         {
             public MockHttpRequest MockRequest { get; set; }
-            public override HttpRequestBase Request {
+            public override HttpRequestBase Request
+            {
                 get
                 {
                     return MockRequest;
+                }
+            }
+            public MockHttpResponse MockResponse { get; set; }
+            public override HttpResponseBase Response
+            {
+                get
+                {
+                    return MockResponse;
                 }
             }
         }
@@ -200,6 +223,8 @@ namespace QueueIT.KnownUserV3.SDK.Tests
         public void ValidateRequestByLocalEventConfig_NullCustomerId_Test()
         {
             // Arrange
+            var httpContextMock = new HttpContextMock() { MockRequest = new MockHttpRequest() { } };
+            KnownUser._HttpContextBase = httpContextMock;
             UserInQueueServiceMock mock = new UserInQueueServiceMock();
             KnownUser._UserInQueueService = (mock);
             bool exceptionWasThrown = false;
@@ -223,6 +248,8 @@ namespace QueueIT.KnownUserV3.SDK.Tests
         public void ValidateRequestByLocalEventConfig_NullSecretKey_Test()
         {
             // Arrange
+            var httpContextMock = new HttpContextMock() { MockRequest = new MockHttpRequest() { } };
+            KnownUser._HttpContextBase = httpContextMock;
             UserInQueueServiceMock mock = new UserInQueueServiceMock();
             KnownUser._UserInQueueService = (mock);
             bool exceptionWasThrown = false;
@@ -269,6 +296,8 @@ namespace QueueIT.KnownUserV3.SDK.Tests
         public void validateRequestByLocalEventConfigNullEventIdTest()
         {
             // Arrange
+            var httpContextMock = new HttpContextMock() { MockRequest = new MockHttpRequest() { } };
+            KnownUser._HttpContextBase = httpContextMock;
             UserInQueueServiceMock mock = new UserInQueueServiceMock();
             KnownUser._UserInQueueService = (mock);
             bool exceptionWasThrown = false;
@@ -395,6 +424,8 @@ namespace QueueIT.KnownUserV3.SDK.Tests
         [Fact]
         public void ValidateRequestByIntegrationConfig_EmptyCurrentUrl_Test()
         {
+            var httpContextMock = new HttpContextMock() { MockRequest = new MockHttpRequest() { } };
+            KnownUser._HttpContextBase = httpContextMock;
             // Arrange        
             UserInQueueServiceMock mock = new UserInQueueServiceMock();
             KnownUser._UserInQueueService = (mock);
@@ -418,7 +449,9 @@ namespace QueueIT.KnownUserV3.SDK.Tests
         [Fact]
         public void ValidateRequestByIntegrationConfig_EmptyIntegrationsConfig_Test()
         {
-            // Arrange        
+            // Arrange 
+            var httpContextMock = new HttpContextMock() { MockRequest = new MockHttpRequest() { } };
+            KnownUser._HttpContextBase = httpContextMock;
             UserInQueueServiceMock mock = new UserInQueueServiceMock();
             KnownUser._UserInQueueService = (mock);
             bool exceptionWasThrown = false;
@@ -481,8 +514,8 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             CustomerIntegration customerIntegration = new CustomerIntegration();
             customerIntegration.Integrations = new IntegrationConfigModel[] { config };
             customerIntegration.Version = 3;
-            var httpContextMock = new HttpContextMock() { MockRequest = new MockHttpRequest() { UserAgentValue = "googlebot", CookiesValue= new HttpCookieCollection()} };
-             KnownUser._HttpContextBase = httpContextMock;
+            var httpContextMock = new HttpContextMock() { MockRequest = new MockHttpRequest() { UserAgentValue = "googlebot", CookiesValue = new HttpCookieCollection() } };
+            KnownUser._HttpContextBase = httpContextMock;
             // Act
             KnownUser.ValidateRequestByIntegrationConfig("http://test.com?event1=true", "queueitToken", customerIntegration, "customerId", "secretKey");
 
@@ -500,6 +533,8 @@ namespace QueueIT.KnownUserV3.SDK.Tests
         public void ValidateRequestByIntegrationConfig_NotMatch_Test()
         {
             // Arrange
+            var httpContextMock = new HttpContextMock() { MockRequest = new MockHttpRequest() { } };
+            KnownUser._HttpContextBase = httpContextMock;
             UserInQueueServiceMock mock = new UserInQueueServiceMock();
             KnownUser._UserInQueueService = (mock);
 
@@ -522,6 +557,8 @@ namespace QueueIT.KnownUserV3.SDK.Tests
         public void ValidateRequestByIntegrationConfig_RedirectLogic_Test(string redirectLogic, string forcedTargetUrl)
         {
             // Arrange
+            var httpContextMock = new HttpContextMock() { MockRequest = new MockHttpRequest() { } };
+            KnownUser._HttpContextBase = httpContextMock;
             UserInQueueServiceMock mock = new UserInQueueServiceMock();
             KnownUser._UserInQueueService = (mock);
 
@@ -561,6 +598,235 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             // Assert
             Assert.True(mock.validateRequestCalls.Count == 1);
             Assert.Equal(forcedTargetUrl, mock.validateRequestCalls[0][0]);
+        }
+
+        [Fact]
+        public void ValidateRequestByIntegrationConfig_Debug()
+        {
+            // Arrange 
+            var httpContextMock = new HttpContextMock()
+            {
+                MockRequest = new MockHttpRequest()
+                {
+                    QueryStringValue = new NameValueCollection()
+                    {
+                        { "queueittoken", "queueittoken_value"},
+                        { "queueitdebug", "queueitdebug_value"}
+
+                    },
+                    UrlValue = new Uri("http://test.com/?event1=true&queueittoken=queueittokenvalue"),
+                    CookiesValue = new HttpCookieCollection()
+                }
+                ,
+                MockResponse = new MockHttpResponse()
+                {
+                    CookiesValue = new HttpCookieCollection()
+                }
+            };
+            KnownUser._HttpContextBase = httpContextMock;
+            UserInQueueServiceMock mock = new UserInQueueServiceMock();
+            KnownUser._UserInQueueService = (mock);
+
+            TriggerPart triggerPart1 = new TriggerPart();
+            triggerPart1.Operator = "Contains";
+            triggerPart1.ValueToCompare = "event1";
+            triggerPart1.UrlPart = "PageUrl";
+            triggerPart1.ValidatorType = "UrlValidator";
+            triggerPart1.IsNegative = false;
+            triggerPart1.IsIgnoreCase = true;
+
+
+
+            TriggerModel trigger = new TriggerModel();
+            trigger.LogicalOperator = "And";
+            trigger.TriggerParts = new TriggerPart[] { triggerPart1 };
+
+            IntegrationConfigModel config = new IntegrationConfigModel();
+            config.Name = "event1action";
+            //config.ActionType = "Queue";
+            config.EventId = "event1";
+            config.CookieDomain = ".test.com";
+            config.LayoutName = "Christmas Layout by Queue-it";
+            config.Culture = "da-DK";
+            config.ExtendCookieValidity = true;
+            config.CookieValidityMinute = 20;
+            config.Triggers = new TriggerModel[] { trigger };
+            config.QueueDomain = "knownusertest.queue-it.net";
+            config.RedirectLogic = "AllowTParameter";
+            config.ForcedTargetUrl = "";
+
+            CustomerIntegration customerIntegration = new CustomerIntegration();
+            customerIntegration.Integrations = new IntegrationConfigModel[] { config };
+            customerIntegration.Version = 3;
+            var queueitToken = QueueITTokenGenerator.GenerateToken(DateTime.UtcNow, "event1",
+                Guid.NewGuid().ToString(), true, null, "secretKey", out var hash, "debug");
+            
+            // Act
+            RequestValidationResult result = KnownUser
+                .ValidateRequestByIntegrationConfig($"http://test.com?event1=true",
+                queueitToken, customerIntegration, "customerId", "secretKey");
+
+            Assert.True(httpContextMock.MockResponse.Cookies["queueitdebug"].Values["pureUrl"]== 
+                "http://test.com?event1=true");
+            Assert.True(httpContextMock.MockResponse.Cookies["queueitdebug"].Values["queueitToken"] ==
+                queueitToken);
+            Assert.True(httpContextMock.MockResponse.Cookies["queueitdebug"].Values["configVersion"] ==
+                "3");
+            Assert.True(httpContextMock.MockResponse.Cookies["queueitdebug"].Values["OriginalUrl"] ==
+                "http://test.com/?event1=true&queueittoken=queueittokenvalue");
+            Assert.True(httpContextMock.MockResponse.Cookies["queueitdebug"].Values["matchedConfig"] ==
+                "event1action");
+            Assert.True(httpContextMock.MockResponse.Cookies["queueitdebug"].Values["targetUrl"] ==
+                "http://test.com?event1=true");
+            Assert.True(httpContextMock.MockResponse.Cookies["queueitdebug"].Values["EventConfig"] ==
+                "EventId:event1&Version:3&QueueDomain=knownusertest.queue-it.net&CookieDomain:.test.com&ExtendCookieValidity:True&CookieValidityMinute:20&LayoutName:Christmas Layout by Queue-it&Culture:da-DK");
+        }
+
+        [Fact]
+        public void ValidateRequestByIntegrationConfig_Debug_WithoutMatch()
+        {
+            // Arrange 
+            var httpContextMock = new HttpContextMock()
+            {
+                MockRequest = new MockHttpRequest()
+                {
+                    QueryStringValue = new NameValueCollection()
+                    {
+                        { "queueittoken", "queueittoken_value"},
+                        { "queueitdebug", "queueitdebug_value"}
+
+                    },
+                    UrlValue = new Uri("http://test.com/?event1=true&queueittoken=queueittokenvalue"),
+                    CookiesValue = new HttpCookieCollection()
+                }
+                ,
+                MockResponse = new MockHttpResponse()
+                {
+                    CookiesValue = new HttpCookieCollection()
+                }
+            };
+            KnownUser._HttpContextBase = httpContextMock;
+            UserInQueueServiceMock mock = new UserInQueueServiceMock();
+            KnownUser._UserInQueueService = (mock);
+
+
+            CustomerIntegration customerIntegration = new CustomerIntegration();
+            customerIntegration.Integrations = new IntegrationConfigModel[] {  };
+            customerIntegration.Version = 10;
+
+            var queueitToken = QueueITTokenGenerator.GenerateToken(DateTime.UtcNow, "event1",
+                        Guid.NewGuid().ToString(), true, null, "secretKey", out var hash, "debug");
+            // Act
+            RequestValidationResult result = KnownUser
+                .ValidateRequestByIntegrationConfig("http://test.com?event1=true",
+                queueitToken, customerIntegration, "customerId", "secretKey");
+
+            Assert.True(httpContextMock.MockResponse.Cookies["queueitdebug"].Values["pureUrl"] ==
+                "http://test.com?event1=true");
+            Assert.True(httpContextMock.MockResponse.Cookies["queueitdebug"].Values["queueitToken"] ==
+                queueitToken);
+            Assert.True(httpContextMock.MockResponse.Cookies["queueitdebug"].Values["configVersion"] ==
+                "10");
+            Assert.True(httpContextMock.MockResponse.Cookies["queueitdebug"].Values["OriginalUrl"] ==
+                "http://test.com/?event1=true&queueittoken=queueittokenvalue");
+            Assert.True(httpContextMock.MockResponse.Cookies["queueitdebug"].Values["matchedConfig"] ==
+                "NULL");
+           }
+        [Fact]
+        public void ValidateRequestByIntegrationConfig_Debug_WithoutMatch_NotValidHash()
+        {
+            // Arrange 
+            var httpContextMock = new HttpContextMock()
+            {
+                MockRequest = new MockHttpRequest()
+                {
+                    QueryStringValue = new NameValueCollection()
+                    {
+                        { "queueittoken", "queueittoken_value"},
+                        { "queueitdebug", "queueitdebug_value"}
+
+                    },
+                    UrlValue = new Uri("http://test.com/?event1=true&queueittoken=queueittokenvalue"),
+                    CookiesValue = new HttpCookieCollection()
+                }
+                ,
+                MockResponse = new MockHttpResponse()
+                {
+                    CookiesValue = new HttpCookieCollection()
+                }
+            };
+            KnownUser._HttpContextBase = httpContextMock;
+            UserInQueueServiceMock mock = new UserInQueueServiceMock();
+            KnownUser._UserInQueueService = (mock);
+
+
+            CustomerIntegration customerIntegration = new CustomerIntegration();
+            customerIntegration.Integrations = new IntegrationConfigModel[] { };
+            customerIntegration.Version = 10;
+
+            var queueitToken = QueueITTokenGenerator.GenerateToken(DateTime.UtcNow, "event1",
+                        Guid.NewGuid().ToString(), true, null, "secretKey", out var hash, "debug");
+            // Act
+            RequestValidationResult result = KnownUser
+                .ValidateRequestByIntegrationConfig("http://test.com?event1=true",
+                queueitToken+"test", customerIntegration, "customerId", "secretKey");
+
+            Assert.True(httpContextMock.MockResponse.Cookies.AllKeys.Length == 0);
+        }
+        [Fact]
+        public void ValidateRequestByLocalEventConfig_Debug()
+        {
+            // Arrange 
+            var httpContextMock = new HttpContextMock()
+            {
+                MockRequest = new MockHttpRequest()
+                {
+                    QueryStringValue = new NameValueCollection()
+                    {
+                        { "queueittoken", "queueittoken_value"},
+                        { "queueitdebug", "queueitdebug_value"}
+
+                    },
+                    UrlValue = new Uri("http://test.com/?event1=true&queueittoken=queueittokenvalue"),
+                    CookiesValue = new HttpCookieCollection()
+                }
+                ,
+                MockResponse = new MockHttpResponse()
+                {
+                    CookiesValue = new HttpCookieCollection()
+                }
+            };
+            KnownUser._HttpContextBase = httpContextMock;
+            UserInQueueServiceMock mock = new UserInQueueServiceMock();
+            KnownUser._UserInQueueService = (mock);
+
+
+            EventConfig eventConfig = new EventConfig();
+            eventConfig.CookieDomain = "cookieDomain";
+            eventConfig.LayoutName = "layoutName";
+            eventConfig.Culture = "culture";
+            eventConfig.EventId = "eventId";
+            eventConfig.QueueDomain = "queueDomain";
+            eventConfig.ExtendCookieValidity = true;
+            eventConfig.CookieValidityMinute = 10;
+            eventConfig.Version = 12;
+            var queueitToken = QueueITTokenGenerator.GenerateToken(DateTime.UtcNow, "event1",
+            Guid.NewGuid().ToString(), true, null, "secretKey", out var hash, "debug");
+
+            // Act
+            RequestValidationResult result = KnownUser
+                .ValidateRequestByLocalEventConfig("http://test.com?event1=true",
+                queueitToken, eventConfig, "customerId", "secretKey");
+
+
+            Assert.True(httpContextMock.MockResponse.Cookies["queueitdebug"].Values["queueitToken"] ==
+                queueitToken);
+            Assert.True(httpContextMock.MockResponse.Cookies["queueitdebug"].Values["OriginalUrl"] ==
+                "http://test.com/?event1=true&queueittoken=queueittokenvalue");
+            Assert.True(httpContextMock.MockResponse.Cookies["queueitdebug"].Values["targetUrl"] ==
+               "http://test.com?event1=true");
+            Assert.True(httpContextMock.MockResponse.Cookies["queueitdebug"].Values["EventConfig"] ==
+                "EventId:eventId&Version:12&QueueDomain=queueDomain&CookieDomain:cookieDomain&ExtendCookieValidity:True&CookieValidityMinute:10&LayoutName:layoutName&Culture:culture");
         }
     }
 }

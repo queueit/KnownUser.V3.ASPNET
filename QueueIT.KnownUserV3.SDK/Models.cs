@@ -34,6 +34,12 @@ namespace QueueIT.KnownUserV3.SDK
         public int CookieValidityMinute { get; set; }
         public string CookieDomain { get; set; }
         public int Version { get; set; }
+        public override string ToString()
+        {
+            return $"EventId:{EventId}&Version:{Version}" +
+                $"&QueueDomain={QueueDomain}&CookieDomain:{CookieDomain}&ExtendCookieValidity:{ExtendCookieValidity}" +
+                $"&CookieValidityMinute:{CookieValidityMinute}&LayoutName:{LayoutName}&Culture:{Culture}";
+        }
     }
 
     public class KnowUserException : Exception

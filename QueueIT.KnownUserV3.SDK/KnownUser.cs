@@ -1,5 +1,7 @@
 ﻿using QueueIT.KnownUserV3.SDK.IntegrationConfig;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Web;
 
 namespace QueueIT.KnownUserV3.SDK
@@ -8,11 +10,22 @@ namespace QueueIT.KnownUserV3.SDK
     {
 
         public const string QueueITTokenKey = "queueittoken";
+        public const string QueueITDebugKey = "queueitdebug";
 
         public static RequestValidationResult ValidateRequestByIntegrationConfig(string currentUrlWithoutQueueITToken,
           string queueitToken, CustomerIntegration customerIntegrationInfo,
           string customerId, string secretKey)
         {
+            var isDebug = GetIsDebug(queueitToken, secretKey);
+            if (isDebug)
+            {
+                var dic = new Dictionary<string, string>();
+                dic.Add("configVersion", customerIntegrationInfo.Version.ToString());
+                dic.Add("pureUrl", currentUrlWithoutQueueITToken);
+                dic.Add("queueitToken", queueitToken);
+                dic.Add("OriginalURL", GetHttpContextBase().Request.Url.AbsoluteUri);
+                DoCookieLog(dic);
+            }
             if (string.IsNullOrEmpty(currentUrlWithoutQueueITToken))
                 throw new ArgumentException("currentUrlWithoutQueueITToken can not be null or empty.");
             if (customerIntegrationInfo == null)
@@ -27,6 +40,10 @@ namespace QueueIT.KnownUserV3.SDK
                 GetHttpContextBase()?.Request?.UserAgent ?? string.Empty
                 );
 
+            if (isDebug)
+            {
+                DoCookieLog(new Dictionary<string, string>() { { "matchedConfig", matchedConfig != null ? matchedConfig.Name : "NULL" } });
+            }
             if (matchedConfig == null)
                 return new RequestValidationResult();
 
@@ -60,9 +77,30 @@ namespace QueueIT.KnownUserV3.SDK
             return ValidateRequestByLocalEventConfig(targetUrl, queueitToken, eventConfig, customerId, secretKey);
         }
 
+        private static bool GetIsDebug(string queueitToken, string secretKey)
+        {
+            var qParams = QueueParameterHelper.ExtractQueueParams(queueitToken);
+            if (qParams != null && qParams.RedirectType != null && qParams.RedirectType.ToLower() == "debug")
+            {
+                return HashHelper.GenerateSHA256Hash(secretKey, qParams.QueueITTokenWithoutHash) == qParams.HashCode;
+            }
+            return false;
+
+        }
+
         public static RequestValidationResult ValidateRequestByLocalEventConfig(string targetUrl, string queueitToken, EventConfig eventConfig,
             string customerId, string secretKey)
         {
+
+            if (GetIsDebug(queueitToken, secretKey))
+            {
+                var dic = new Dictionary<string, string>();
+                dic.Add("targetUrl", targetUrl);
+                dic.Add("queueitToken", queueitToken);
+                dic.Add("EventConfig", eventConfig != null ? eventConfig.ToString() : "NULL");
+                dic.Add("OriginalURL", GetHttpContextBase().Request.Url.AbsoluteUri);
+                DoCookieLog(dic);
+            }
             if (string.IsNullOrEmpty(customerId))
                 throw new ArgumentException("customerId can not be null or empty.");
             if (string.IsNullOrEmpty(secretKey))
@@ -119,6 +157,24 @@ namespace QueueIT.KnownUserV3.SDK
             if (_UserInQueueService == null)
                 return new HttpContextWrapper(HttpContext.Current);
             return _HttpContextBase;
+        }
+
+        internal static void DoCookieLog(Dictionary<string, string> dic)
+        {
+            if (!GetHttpContextBase().Response.Cookies.AllKeys.Any(key => key == QueueITDebugKey))
+            {
+                var cookie = new HttpCookie(QueueITDebugKey);
+                GetHttpContextBase().Response.Cookies.Add(cookie);
+            }
+
+            var debugCookie = GetHttpContextBase().Response.Cookies[QueueITDebugKey];
+            foreach (var nameVal in dic)
+            {
+                if (!debugCookie.Values.AllKeys.Any(key => key == nameVal.Key))
+                {
+                    debugCookie.Values.Add(nameVal.Key, nameVal.Value);
+                }
+            }
         }
     }
 }

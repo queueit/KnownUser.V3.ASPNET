@@ -13,7 +13,7 @@ namespace QueueIT.KnownUserV3.SDK
         public const string HashKey = "h";
         public const string EventIdKey = "e";
         public const string QueueIdKey = "q";
-
+        public const string RedirectTypeKey = "rt";
         public const char KeyValueSeparatorChar = '_';
         public const char KeyValueSeparatorGroupChar = '~';
 
@@ -68,6 +68,9 @@ namespace QueueIT.KnownUserV3.SDK
                             break;
                         case QueueIdKey:
                             result.QueueId = keyValueArr[1];
+                            break;
+                        case RedirectTypeKey:
+                            result.RedirectType = keyValueArr[1];
                             break;
 
                     }
@@ -135,5 +138,6 @@ namespace QueueIT.KnownUserV3.SDK
         public string QueueITToken { get; set; }
         public string QueueITTokenWithoutHash { get; set; }
         public string QueueId { get; set; }
+        public string RedirectType { get; set; }
     }
 }
