@@ -1,3 +1,5 @@
+[![NuGet](http://img.shields.io/nuget/v/QueueIT.KnownUserV3.SDK.svg)](https://www.nuget.org/packages/QueueIT.KnownUserV3.SDK/)
+
 # Queue-it KnownUser SDK for ASP.NET
 The Queue-it Security Framework is used to ensure that end users cannot bypass the queue by adding a server-side integration to your server. 
 ## Introduction
@@ -93,7 +95,7 @@ private void DoValidation()
 
 Install using NuGet.
 
-    [![NuGet](http://img.shields.io/nuget/v/QueueIT.KnownUserV3.SDK.svg)](https://www.nuget.org/packages/QueueIT.KnownUserV3.SDK/)
+    PM> Install-Package QueueIT.KnownUserV3.SDK
 
 ## Alternative Implementation
 If your application server (maybe due to security reasons) is not allowed to do external GET requests, then you have three options:
