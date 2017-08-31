@@ -1,13 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace QueueIT.KnownUserV3.SDK
 {
     public class RequestValidationResult
     {
+        public RequestValidationResult(string actionType)
+        {
+            this.ActionType = actionType;
+        }
         public string RedirectUrl { get; set; }
         public string QueueId { get; set; }
         public bool DoRedirect
@@ -17,12 +17,13 @@ namespace QueueIT.KnownUserV3.SDK
                 return !string.IsNullOrEmpty(RedirectUrl);
             }
         }
-        public string EventId { get; set; }
+        public string EventId { get; internal set; }
+        public string ActionType { get; internal set; }
     }
 
-    public class EventConfig
+    public class QueueEventConfig
     {
-        public EventConfig()
+        public QueueEventConfig()
         {
             Version = -1;
         }
@@ -37,8 +38,25 @@ namespace QueueIT.KnownUserV3.SDK
         public override string ToString()
         {
             return $"EventId:{EventId}&Version:{Version}" +
-                $"&QueueDomain={QueueDomain}&CookieDomain:{CookieDomain}&ExtendCookieValidity:{ExtendCookieValidity}" +
+                $"&QueueDomain:{QueueDomain}&CookieDomain:{CookieDomain}&ExtendCookieValidity:{ExtendCookieValidity}" +
                 $"&CookieValidityMinute:{CookieValidityMinute}&LayoutName:{LayoutName}&Culture:{Culture}";
+        }
+    }
+
+    public class CancelEventConfig
+    {
+        public CancelEventConfig()
+        {
+            Version = -1;
+        }
+        public string EventId { get; set; }
+        public string QueueDomain { get; set; }
+        public int Version { get; set; }
+        public string CookieDomain { get; set; }
+        public override string ToString()
+        {
+            return $"EventId:{EventId}&Version:{Version}" +
+                $"&QueueDomain:{QueueDomain}&CookieDomain:{CookieDomain}";
         }
     }
 

@@ -27,8 +27,6 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             };
             fakeResponse.Stub(stub => stub.Cookies).Return(cookies);
 
-          
-
             var testObject = new UserInQueueStateCookieRepository(fakeContext);
 
             testObject.Store(eventId, queueId,true, cookieDomain, cookieValidity, secretKey);
@@ -49,8 +47,8 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             Assert.True(state.IsValid);
             Assert.True(state.IsStateExtendable);
             Assert.True(state.QueueId == queueId);
-
         }
+
         [Fact]
         public void Store_HasValidState_NonExtendableCookie_CookieIsSaved()
         {
@@ -109,7 +107,6 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             };
             fakeResponse.Stub(stub => stub.Cookies).Return(cookies);
 
-
             var testObject = new UserInQueueStateCookieRepository(fakeContext);
              testObject.Store(eventId,queueId, false, cookieDomain, cookieValidity, secretKey);
             Assert.True(cookies[cookieKey].Expires.Subtract(DateTime.UtcNow.AddDays(1)) < TimeSpan.FromMinutes(1));
@@ -160,7 +157,6 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             var fakeRequest = MockRepository.GenerateMock<HttpRequestBase>();
             fakeContext.Stub(stub => stub.Request).Return(fakeRequest);
             fakeRequest.Stub(stub => stub.Cookies).Return(cookies);
-
 
             var state = testObject.GetState(eventId, secretKey);
             Assert.False(state.IsValid);
@@ -225,9 +221,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             fakeResponse.Stub(stub => stub.Cookies).Return(cookies);
 
             var testObject = new UserInQueueStateCookieRepository(fakeContext);
-
-
-
+            
             var fakeRequest = MockRepository.GenerateMock<HttpRequestBase>();
             fakeContext.Stub(stub => stub.Request).Return(fakeRequest);
             fakeRequest.Stub(stub => stub.Cookies).Return(cookies);
@@ -237,6 +231,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             Assert.False(state.IsStateExtendable);
             Assert.True(String.IsNullOrEmpty(state.QueueId));
         }
+
         [Fact]
         public void HasValidState_InvalidCookie_StateIsNotValid()
         {
@@ -256,8 +251,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             fakeResponse.Stub(stub => stub.Cookies).Return(cookies);
 
             var testObject = new UserInQueueStateCookieRepository(fakeContext);
-
-
+            
             var fakeRequest = MockRepository.GenerateMock<HttpRequestBase>();
             fakeContext.Stub(stub => stub.Request).Return(fakeRequest);
             fakeRequest.Stub(stub => stub.Cookies).Return(cookies);
@@ -267,51 +261,31 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             Assert.False(state.IsStateExtendable);
             Assert.True(String.IsNullOrEmpty(state.QueueId));
         }
+
         [Fact]
         public void CancelQueueCookie_Test()
         {
             var eventId = "event1";
+            var cookieDomain = "testDomain";
 
             var cookieKey = UserInQueueStateCookieRepository.GetCookieKey(eventId);
             var fakeContext = MockRepository.GenerateMock<HttpContextBase>();
-
             var fakeResponse = MockRepository.GenerateMock<HttpResponseBase>();
             fakeContext.Stub(stub => stub.Response).Return(fakeResponse);
             var cookies = new HttpCookieCollection() {
-                new HttpCookie(cookieKey) { Value = "test" },
                 new HttpCookie("a") { Value = "test" },
                 new HttpCookie("b") { Value = "test" }
             };
             fakeResponse.Stub(stub => stub.Cookies).Return(cookies);
- 
+
             var testObject = new UserInQueueStateCookieRepository(fakeContext);
 
 
-            testObject.CancelQueueCookie(eventId);
+            testObject.CancelQueueCookie(eventId, cookieDomain);
             Assert.True(cookies[cookieKey].Expires.Subtract(DateTime.UtcNow.AddDays(-1)) < TimeSpan.FromMinutes(1));
+            Assert.True(cookies[cookieKey].Domain == cookieDomain);            
         }
-        [Fact]
-        public void CancelQueueCookie_CookieDoesNotExist_Test()
-        {
-            var eventId = "event1";
-            var cookieKey = UserInQueueStateCookieRepository.GetCookieKey(eventId);
-            var fakeContext = MockRepository.GenerateMock<HttpContextBase>();
-
-            var fakeResponse = MockRepository.GenerateMock<HttpResponseBase>();
-            fakeContext.Stub(stub => stub.Response).Return(fakeResponse);
-            var cookies = new HttpCookieCollection() {
-                new HttpCookie("a") { Value = "test" },
-                new HttpCookie("b") { Value = "test" }
-            };
-            fakeResponse.Stub(stub => stub.Cookies).Return(cookies);
-     
-            var testObject = new UserInQueueStateCookieRepository(fakeContext);
-       
-
-            testObject.CancelQueueCookie(eventId);
-            Assert.True(cookies[cookieKey] == null);
-        }
-
+        
         [Fact]
         public void ExtendQueueCookie_CookieExist_Test()
         {
@@ -353,7 +327,6 @@ namespace QueueIT.KnownUserV3.SDK.Tests
         [Fact]
         public void ExtendQueueCookie_CookieDoesNotExist_Test()
         {
- 
             var eventId = "event1";
             var secretKey = "secretKey";
             var cookieKey = UserInQueueStateCookieRepository.GetCookieKey(eventId);

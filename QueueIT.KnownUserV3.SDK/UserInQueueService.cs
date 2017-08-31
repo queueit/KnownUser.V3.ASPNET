@@ -1,44 +1,47 @@
 ﻿using System;
 using System.Web;
 using System.Collections.Generic;
+using QueueIT.KnownUserV3.SDK.IntegrationConfig;
 
 namespace QueueIT.KnownUserV3.SDK
 {
     internal interface IUserInQueueService
     {
-        RequestValidationResult ValidateRequest(
+        RequestValidationResult ValidateQueueRequest(
             string targetUrl,
             string queueitToken,
-            EventConfig config,
+            QueueEventConfig config,
             string customerId,
-             string secretKey);
-        void CancelQueueCookie(string eventId);
-        void ExtendQueueCookie(
-           string eventId,
-           int cookieValidityMinute,
-           string secretKey
-            );
+            string secretKey);
 
+        RequestValidationResult ValidateCancelRequest(
+            string targetUrl,
+            CancelEventConfig config,
+            string customerId,
+            string secretKey);
+
+        void ExtendQueueCookie(
+            string eventId,
+            int cookieValidityMinute,
+            string secretKey);
     }
+
     internal class UserInQueueService : IUserInQueueService
     {
+        internal const string SDK_VERSION = "3.2.0";
         private readonly IUserInQueueStateRepository _userInQueueStateRepository;
 
-
-        public UserInQueueService(
-            IUserInQueueStateRepository queueStateRepository)
+        public UserInQueueService(IUserInQueueStateRepository queueStateRepository)
         {
             this._userInQueueStateRepository = queueStateRepository;
         }
 
-
-        public RequestValidationResult ValidateRequest(
+        public RequestValidationResult ValidateQueueRequest(
             string targetUrl,
             string queueitToken,
-            EventConfig config,
+            QueueEventConfig config,
             string customerId,
-            string secretKey
-           )
+            string secretKey)
         {
             var state = _userInQueueStateRepository.GetState(config.EventId, secretKey);
             if (state.IsValid)
@@ -52,7 +55,7 @@ namespace QueueIT.KnownUserV3.SDK
                         config.CookieValidityMinute,
                         secretKey);
                 }
-                return new RequestValidationResult() { EventId = config.EventId , QueueId = state.QueueId};
+                return new RequestValidationResult(ActionType.QueueAction) { EventId = config.EventId, QueueId = state.QueueId };
             }
 
             QueueUrlParams queueParmas = QueueParameterHelper.ExtractQueueParams(queueitToken);
@@ -70,7 +73,7 @@ namespace QueueIT.KnownUserV3.SDK
         private RequestValidationResult GetQueueITTokenValidationResult(
             string targetUrl,
             string eventId,
-            EventConfig config,
+            QueueEventConfig config,
             QueueUrlParams queueParams,
             string customerId,
             string secretKey)
@@ -93,26 +96,28 @@ namespace QueueIT.KnownUserV3.SDK
                 queueParams.CookieValidityMinute ?? config.CookieValidityMinute,
                 secretKey);
 
-            return new RequestValidationResult() { EventId = config.EventId };
+            return new RequestValidationResult(ActionType.QueueAction) { EventId = config.EventId };
         }
 
         private RequestValidationResult GetVaidationErrorResult(
             string customerId,
              string targetUrl,
-             EventConfig config,
+             QueueEventConfig config,
              QueueUrlParams qParams,
              string errorCode)
         {
-
-            var query = GetQueryString(customerId, config) +
+            var query = GetQueryString(customerId, config.EventId, config.Version, config.Culture, config.LayoutName) +
                 $"&queueittoken={qParams.QueueITToken}" +
                 $"&ts={DateTimeHelper.GetUnixTimeStampFromDate(DateTime.UtcNow)}" +
                 (!string.IsNullOrEmpty(targetUrl) ? $"&t={HttpUtility.UrlEncode(targetUrl)}" : "");
+
             var domainAlias = config.QueueDomain;
             if (!domainAlias.EndsWith("/"))
                 domainAlias = domainAlias + "/";
+
             var redirectUrl = "https://" + domainAlias + $"error/{errorCode}?" + query;
-            return new RequestValidationResult()
+
+            return new RequestValidationResult(ActionType.QueueAction)
             {
                 RedirectUrl = redirectUrl,
                 EventId = config.EventId
@@ -121,44 +126,40 @@ namespace QueueIT.KnownUserV3.SDK
 
         private RequestValidationResult GetInQueueRedirectResult(
             string targetUrl,
-            EventConfig config,
+            QueueEventConfig config,
             string customerId)
         {
-
             var redirectUrl = "https://" + config.QueueDomain + "?" +
-                GetQueryString(customerId, config) +
+                GetQueryString(customerId, config.EventId, config.Version, config.Culture, config.LayoutName) +
                     (!string.IsNullOrEmpty(targetUrl) ? $"&t={HttpUtility.UrlEncode(targetUrl)}" : "");
-            return new RequestValidationResult()
+
+            return new RequestValidationResult(ActionType.QueueAction)
             {
                 RedirectUrl = redirectUrl,
                 EventId = config.EventId
             };
         }
 
-
-
         private string GetQueryString(
             string customerId,
-            EventConfig config)
+            string eventId,
+            int configVersion,
+            string culture = null,
+            string layoutName = null)
         {
             List<string> queryStringList = new List<string>();
             queryStringList.Add($"c={HttpUtility.UrlEncode(customerId)}");
-            queryStringList.Add($"e={HttpUtility.UrlEncode(config.EventId)}");
-            queryStringList.Add($"ver=v3-aspnet-{this.GetType().Assembly.GetName().Version.ToString()}");
-            queryStringList.Add($"cver={config.Version.ToString()}");
+            queryStringList.Add($"e={HttpUtility.UrlEncode(eventId)}");
+            queryStringList.Add($"ver=v3-aspnet-{SDK_VERSION}");
+            queryStringList.Add($"cver={configVersion.ToString()}");
 
-            if (!string.IsNullOrEmpty(config.Culture))
-                queryStringList.Add(string.Concat("cid=", HttpUtility.UrlEncode(config.Culture)));
+            if (!string.IsNullOrEmpty(culture))
+                queryStringList.Add(string.Concat("cid=", HttpUtility.UrlEncode(culture)));
 
-            if (!string.IsNullOrEmpty(config.LayoutName))
-                queryStringList.Add(string.Concat("l=", HttpUtility.UrlEncode(config.LayoutName)));
-
+            if (!string.IsNullOrEmpty(layoutName))
+                queryStringList.Add(string.Concat("l=", HttpUtility.UrlEncode(layoutName)));
 
             return string.Join("&", queryStringList);
-        }
-        public void CancelQueueCookie(string eventId)
-        {
-            this._userInQueueStateRepository.CancelQueueCookie(eventId);
         }
 
         public void ExtendQueueCookie(
@@ -167,6 +168,41 @@ namespace QueueIT.KnownUserV3.SDK
             string secretKey)
         {
             this._userInQueueStateRepository.ExtendQueueCookie(eventId, cookieValidityMinute, secretKey);
+        }
+
+        public RequestValidationResult ValidateCancelRequest(string targetUrl, CancelEventConfig config, string customerId, string secretKey)
+        {
+            var state = _userInQueueStateRepository.GetState(config.EventId, secretKey);
+
+            if (state.IsValid)
+            {
+                this._userInQueueStateRepository.CancelQueueCookie(config.EventId, config.CookieDomain);
+
+                var query = GetQueryString(customerId, config.EventId, config.Version) +
+                         (!string.IsNullOrEmpty(targetUrl) ? $"&r={HttpUtility.UrlEncode(targetUrl)}" : "");
+
+                var domainAlias = config.QueueDomain;
+                if (!domainAlias.EndsWith("/"))
+                    domainAlias = domainAlias + "/";
+
+                var redirectUrl = "https://" + domainAlias + "cancel/" + customerId + "/" + config.EventId + "/?" + query;
+
+                return new RequestValidationResult(ActionType.CancelAction)
+                {
+                    RedirectUrl = redirectUrl,
+                    EventId = config.EventId,
+                    QueueId = state.QueueId
+                };
+            }
+            else
+            {
+                return new RequestValidationResult(ActionType.CancelAction)
+                {
+                    RedirectUrl = null,
+                    EventId = config.EventId,
+                    QueueId = null
+                };
+            }
         }
     }
 }

@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace QueueIT.KnownUserV3.SDK.Tests
@@ -22,8 +18,8 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             Assert.True(queueParameter.HashCode == "218b734e-d5be-4b60-ad66-9b1b326266e2");
             Assert.True(queueParameter.QueueITToken == queueitToken);
             Assert.True(queueParameter.QueueITTokenWithoutHash == "ts_1480593661~cv_10~ce_false~q_944c1f44-60dd-4e37-aabc-f3e4bb1c8895~c_customerid~e_eventid~rt_disabled");
-
         }
+
         [Fact]
         public void TryExtractQueueParams_NotValidFormat_Test()
         {
@@ -37,7 +33,5 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             Assert.True(queueParameter.HashCode == null);
             Assert.True(queueParameter.QueueITToken == queueitToken);
         }
-
-
     }
 }

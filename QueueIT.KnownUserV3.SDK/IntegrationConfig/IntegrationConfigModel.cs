@@ -9,11 +9,12 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfig
         public string CookieDomain { get; set; }
         public string LayoutName { get; set; }
         public string Culture { get; set; }
-        public bool ExtendCookieValidity { get; set; }
-        public int CookieValidityMinute { get; set; }
+        public bool? ExtendCookieValidity { get; set; }
+        public int? CookieValidityMinute { get; set; }
         public string QueueDomain { get; set; }
         public string RedirectLogic { get; set; }
         public string ForcedTargetUrl { get; set; }
+        public string ActionType { get; set; }
         public IEnumerable<TriggerModel> Triggers { get; set; }
     }
 
@@ -79,5 +80,11 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfig
     {
         public const string Or = "Or";
         public const string And = "And";
+    }
+
+    internal static class ActionType
+    {
+        public const string CancelAction = "Cancel";
+        public const string QueueAction = "Queue";
     }
 }
