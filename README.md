@@ -93,12 +93,6 @@ private void DoValidation()
 }
 ```
 
-## Installation
-
-Install using NuGet.
-
-    Not Available
-
 ## Alternative Implementation
 If your application server (maybe due to security reasons) is not allowed to do external GET requests, then you have three options:
 
