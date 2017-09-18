@@ -35,8 +35,7 @@ namespace QueueIT.KnownUserV3.SDK
             var matchedConfig = configEvaluater.GetMatchedIntegrationConfig(
                 customerIntegrationInfo,
                 currentUrlWithoutQueueITToken,
-                GetHttpContextBase()?.Request?.Cookies,
-                GetHttpContextBase()?.Request?.UserAgent ?? string.Empty);
+                GetHttpContextBase()?.Request);
 
             if (isDebug)
             {

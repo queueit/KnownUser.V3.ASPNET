@@ -41,6 +41,8 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfig
         public string UrlPart { get; set; }
         //CookieValidator
         public string CookieName { get; set; }
+        //HttpHeaderValidator
+        public string HttpHeaderName { get; set; }
     }
 
     public class TriggerModel
@@ -58,6 +60,7 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfig
         public const string UrlValidator = "UrlValidator";
         public const string CookieValidator = "CookieValidator";
         public const string UserAgentValidator = "UserAgentValidator";
+        public const string HttpHeaderValidator = "HttpHeaderValidator";
     }
 
     internal static class UrlPartType

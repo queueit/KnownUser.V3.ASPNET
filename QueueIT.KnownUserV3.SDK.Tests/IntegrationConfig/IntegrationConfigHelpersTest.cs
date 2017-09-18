@@ -1,11 +1,8 @@
 ﻿using QueueIT.KnownUserV3.SDK.IntegrationConfig;
+using Rhino.Mocks;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Rhino;
-using Rhino.Mocks;
+using System.Collections.Specialized;
 using System.Web;
 using Xunit;
 
@@ -45,7 +42,6 @@ namespace QueueIT.KnownUserV3.SDK.Tests.IntegrationConfig
             Assert.False(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.StartsWith, true, true, "test1_test1_test", "Test1"));
         }
 
-
         [Fact]
         public void Evaluate_EndsWith()
         {
@@ -64,6 +60,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests.IntegrationConfig
             Assert.False(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.MatchesWith, true, true, "test1_test1_testshop", ".*Shop.*"));
         }
     }
+
     public class CookieValidatorHelperTest
     {
         [Fact]
@@ -135,7 +132,6 @@ namespace QueueIT.KnownUserV3.SDK.Tests.IntegrationConfig
         }
     }
 
-
     public class UserAgentValidatorHelperTest
     {
         [Fact]
@@ -154,7 +150,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests.IntegrationConfig
             triggerPart.IsNegative = true;
             Assert.True(UserAgentValidatorHelper.Evaluate(triggerPart, "oglebot sample useraagent"));
 
-            
+
             triggerPart.ValueToCompare = "googlebot";
             triggerPart.Operator = ComparisonOperatorType.Contains;
             triggerPart.IsIgnoreCase = false;
@@ -171,6 +167,40 @@ namespace QueueIT.KnownUserV3.SDK.Tests.IntegrationConfig
         }
     }
 
+    public class HttpHeaderValidatorTest
+    {
+        [Fact]
+        public void Evaluate_Test()
+        {
+            var triggerPart = new TriggerPart()
+            {
+                HttpHeaderName = "c1",
+                Operator = ComparisonOperatorType.Contains,
+                ValueToCompare = "1"
+            };
+            var httpHeaders = new NameValueCollection() { };
+            Assert.False(HttpHeaderValidatorHelper.Evaluate(triggerPart, httpHeaders));
+
+            httpHeaders.Add("c5", "5");
+            httpHeaders.Add("c1", "1");
+            httpHeaders.Add("c2", "test");
+            Assert.True(HttpHeaderValidatorHelper.Evaluate(triggerPart, httpHeaders));
+
+            triggerPart.ValueToCompare = "5";
+            Assert.False(HttpHeaderValidatorHelper.Evaluate(triggerPart, httpHeaders));
+
+            triggerPart.ValueToCompare = "Test";
+            triggerPart.IsIgnoreCase = true;
+            triggerPart.HttpHeaderName = "c2";
+            Assert.True(HttpHeaderValidatorHelper.Evaluate(triggerPart, httpHeaders));
+
+            triggerPart.ValueToCompare = "Test";
+            triggerPart.IsIgnoreCase = true;
+            triggerPart.IsNegative = true;
+            triggerPart.HttpHeaderName = "c2";
+            Assert.False(HttpHeaderValidatorHelper.Evaluate(triggerPart, httpHeaders));
+        }
+    }
 
     public class IntegrationEvaluatorTest
     {
@@ -196,7 +226,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests.IntegrationConfig
                                                                 ValidatorType= ValidatorType.CookieValidator
                                                             },
                                                             new TriggerPart() {
-                                                                
+
                                                                 ValidatorType= ValidatorType.UserAgentValidator,
                                                                 ValueToCompare= "test",
                                                                 Operator= ComparisonOperatorType.Contains
@@ -210,8 +240,13 @@ namespace QueueIT.KnownUserV3.SDK.Tests.IntegrationConfig
 
             var url = new Uri("http://test.tesdomain.com:8080/test?q=2");
 
-            Assert.True(testObject.GetMatchedIntegrationConfig(customerIntegration, url.AbsoluteUri, new HttpCookieCollection(),string.Empty) == null);
+            var httpRequestMock = MockRepository.GenerateMock<HttpRequestBase>();
+            httpRequestMock.Stub(r => r.Cookies).Return(new HttpCookieCollection());
+            httpRequestMock.Stub(r => r.UserAgent).Return(string.Empty);
+
+            Assert.True(testObject.GetMatchedIntegrationConfig(customerIntegration, url.AbsoluteUri, httpRequestMock) == null);
         }
+
         [Fact]
         public void GetMatchedIntegrationConfig_OneTrigger_And_Matched()
         {
@@ -252,10 +287,12 @@ namespace QueueIT.KnownUserV3.SDK.Tests.IntegrationConfig
 
 
             var url = new Uri("http://test.tesdomain.com:8080/test?q=2");
-       
 
-            Assert.True(testObject.GetMatchedIntegrationConfig(customerIntegration, url.AbsoluteUri,
-                new HttpCookieCollection() { new HttpCookie("c1", "Value1") }, string.Empty).Name == "integration1");
+            var httpRequestMock = MockRepository.GenerateMock<HttpRequestBase>();
+            httpRequestMock.Stub(r => r.Cookies).Return(new HttpCookieCollection() { new HttpCookie("c1", "Value1") });
+            httpRequestMock.Stub(r => r.UserAgent).Return(string.Empty);
+
+            Assert.True(testObject.GetMatchedIntegrationConfig(customerIntegration, url.AbsoluteUri, httpRequestMock).Name == "integration1");
         }
 
         [Fact]
@@ -306,10 +343,71 @@ namespace QueueIT.KnownUserV3.SDK.Tests.IntegrationConfig
 
             var url = new Uri("http://test.tesdomain.com:8080/test?q=2");
 
+            var httpRequestMock = MockRepository.GenerateMock<HttpRequestBase>();
+            httpRequestMock.Stub(r => r.Cookies).Return(new HttpCookieCollection() { new HttpCookie("c1", "Value1") });
+            httpRequestMock.Stub(r => r.UserAgent).Return("bot.html google.com googlebot test");
 
-            Assert.True(testObject.GetMatchedIntegrationConfig(customerIntegration, url.AbsoluteUri,
-                new HttpCookieCollection() { new HttpCookie("c1", "Value1") }, "bot.html google.com googlebot test")==null);
+            Assert.True(testObject.GetMatchedIntegrationConfig(customerIntegration, url.AbsoluteUri, httpRequestMock) == null);
         }
+
+        [Fact]
+        public void GetMatchedIntegrationConfig_OneTrigger_And_NotMatched_HttpHeader()
+        {
+            var testObject = new IntegrationEvaluator();
+
+            var customerIntegration = new CustomerIntegration()
+            {
+
+                Integrations = new List<IntegrationConfigModel> {
+                                             new IntegrationConfigModel()
+                                             {
+                                                 Name= "integration1",
+                                                 Triggers = new List<TriggerModel>() {
+                                                            new TriggerModel() {
+                                                                LogicalOperator = LogicalOperatorType.And,
+                                                                TriggerParts = new List<TriggerPart>() {
+                                                                    new TriggerPart() {
+                                                                        CookieName ="c1",
+                                                                        Operator = ComparisonOperatorType.EqualS,
+                                                                        IsIgnoreCase= true,
+                                                                        ValueToCompare ="value1",
+                                                                        ValidatorType= ValidatorType.CookieValidator
+                                                                    },
+                                                                    new TriggerPart() {
+                                                                        UrlPart = UrlPartType.PageUrl,
+                                                                        ValidatorType= ValidatorType.UrlValidator,
+                                                                        ValueToCompare= "test",
+                                                                        Operator= ComparisonOperatorType.Contains
+                                                                        },
+                                                                   new TriggerPart() {
+                                                                       HttpHeaderName = "Akamai-bot",
+                                                                       ValidatorType = ValidatorType.HttpHeaderValidator,
+                                                                        ValueToCompare= "bot",
+                                                                        Operator= ComparisonOperatorType.Contains,
+                                                                        IsIgnoreCase= true,
+                                                                        IsNegative= true
+                                                                        }
+
+                                                                }
+                                                    }
+                                              }
+                                            }
+
+            }
+            };
+
+
+            var url = new Uri("http://test.tesdomain.com:8080/test?q=2");
+
+            var httpRequestMock = MockRepository.GenerateMock<HttpRequestBase>();
+            httpRequestMock.Stub(r => r.Cookies).Return(new HttpCookieCollection() { new HttpCookie("c1", "Value1") });
+            var httpHeaders = new NameValueCollection();
+            httpHeaders.Add("Akamai-bot", "bot");
+            httpRequestMock.Stub(r => r.Headers).Return(httpHeaders);
+
+            Assert.True(testObject.GetMatchedIntegrationConfig(customerIntegration, url.AbsoluteUri, httpRequestMock) == null);
+        }
+
         [Fact]
         public void GetMatchedIntegrationConfig_OneTrigger_Or_NotMatched()
         {
@@ -348,14 +446,15 @@ namespace QueueIT.KnownUserV3.SDK.Tests.IntegrationConfig
 
             };
 
-
             var url = new Uri("http://test.tesdomain.com:8080/test?q=2");
- 
 
+            var httpRequestMock = MockRepository.GenerateMock<HttpRequestBase>();
+            httpRequestMock.Stub(r => r.Cookies).Return(new HttpCookieCollection() { new HttpCookie("c2", "value1") });
+            httpRequestMock.Stub(r => r.UserAgent).Return(string.Empty);
 
-            Assert.True(testObject.GetMatchedIntegrationConfig(customerIntegration, url.AbsoluteUri,
-                new HttpCookieCollection() { new HttpCookie("c2", "value1") },  string.Empty) == null);
+            Assert.True(testObject.GetMatchedIntegrationConfig(customerIntegration, url.AbsoluteUri, httpRequestMock) == null);
         }
+
         [Fact]
         public void GetMatchedIntegrationConfig_OneTrigger_Or_Matched()
         {
@@ -395,10 +494,10 @@ namespace QueueIT.KnownUserV3.SDK.Tests.IntegrationConfig
 
             var url = new Uri("http://test.tesdomain.com:8080/test?q=2");
             var httpRequestMock = MockRepository.GenerateMock<HttpRequestBase>();
+            httpRequestMock.Stub(r => r.Cookies).Return(new HttpCookieCollection() { new HttpCookie("c1", "value1") });
+            httpRequestMock.Stub(r => r.UserAgent).Return(string.Empty);
 
-
-            Assert.True(testObject.GetMatchedIntegrationConfig(customerIntegration, url.AbsoluteUri, 
-                new HttpCookieCollection() { new HttpCookie("c1", "value1") }, string.Empty).Name == "integration1");
+            Assert.True(testObject.GetMatchedIntegrationConfig(customerIntegration, url.AbsoluteUri, httpRequestMock).Name == "integration1");
         }
 
         [Fact]
@@ -445,12 +544,14 @@ namespace QueueIT.KnownUserV3.SDK.Tests.IntegrationConfig
 
             };
 
-            
+
             var url = new Uri("http://test.tesdomain.com:8080/test?q=2");
 
+            var httpRequestMock = MockRepository.GenerateMock<HttpRequestBase>();
+            httpRequestMock.Stub(r => r.Cookies).Return(new HttpCookieCollection());
+            httpRequestMock.Stub(r => r.UserAgent).Return(string.Empty);
 
-            Assert.True(testObject.GetMatchedIntegrationConfig(customerIntegration, url.AbsoluteUri,
-                new HttpCookieCollection() { }, string.Empty).Name=="integration1", string.Empty);
+            Assert.True(testObject.GetMatchedIntegrationConfig(customerIntegration, url.AbsoluteUri, httpRequestMock).Name == "integration1", string.Empty);
         }
 
         [Fact]
@@ -499,8 +600,11 @@ namespace QueueIT.KnownUserV3.SDK.Tests.IntegrationConfig
 
             var url = new Uri("http://test.tesdomain.com:8080/test?q=2");
 
+            var httpRequestMock = MockRepository.GenerateMock<HttpRequestBase>();
+            httpRequestMock.Stub(r => r.Cookies).Return(new HttpCookieCollection());
+            httpRequestMock.Stub(r => r.UserAgent).Return(string.Empty);
 
-            Assert.True(testObject.GetMatchedIntegrationConfig(customerIntegration, url.AbsoluteUri, new HttpCookieCollection() { }, string.Empty) ==null);
+            Assert.True(testObject.GetMatchedIntegrationConfig(customerIntegration, url.AbsoluteUri, httpRequestMock) == null);
         }
 
         [Fact]
@@ -574,11 +678,12 @@ namespace QueueIT.KnownUserV3.SDK.Tests.IntegrationConfig
             };
 
             var url = new Uri("http://test.tesdomain.com:8080/test?q=2");
-            var httpRequestMock = MockRepository.GenerateMock<HttpRequestBase>();
 
-            Assert.False(testObject.GetMatchedIntegrationConfig(customerIntegration, url.AbsoluteUri, 
-                new HttpCookieCollection() { new HttpCookie("c1") { Value = "Value1" } }, string.Empty).Name=="integration2");
+            var httpRequestMock = MockRepository.GenerateMock<HttpRequestBase>();
+            httpRequestMock.Stub(r => r.Cookies).Return(new HttpCookieCollection() { new HttpCookie("c1") { Value = "Value1" } });
+            httpRequestMock.Stub(r => r.UserAgent).Return(string.Empty);
+
+            Assert.False(testObject.GetMatchedIntegrationConfig(customerIntegration, url.AbsoluteUri, httpRequestMock).Name == "integration2");
         }
     }
 }
-

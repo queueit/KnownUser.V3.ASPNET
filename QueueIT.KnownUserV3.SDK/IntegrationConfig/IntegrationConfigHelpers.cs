@@ -1,18 +1,22 @@
-﻿using System.Text.RegularExpressions;
+﻿using System;
+using System.Collections.Specialized;
+using System.Text.RegularExpressions;
 using System.Web;
 
 namespace QueueIT.KnownUserV3.SDK.IntegrationConfig
 {
     internal class IntegrationEvaluator : IIntegrationEvaluator
     {
-        public IntegrationConfigModel GetMatchedIntegrationConfig(CustomerIntegration customerIntegration,
-            string currentPageUrl, HttpCookieCollection cookieCollection, string userAgent)
+        public IntegrationConfigModel GetMatchedIntegrationConfig(CustomerIntegration customerIntegration, string currentPageUrl, HttpRequestBase request)
         {
+            if (request == null)
+                throw new ArgumentException("request is null");
+
             foreach (var integration in customerIntegration.Integrations)
             {
                 foreach (var trigger in integration.Triggers)
                 {
-                    if (EvaluateTrigger(trigger, currentPageUrl, cookieCollection,userAgent))
+                    if (EvaluateTrigger(trigger, currentPageUrl, request))
                     {
                         return integration;
                     }
@@ -21,14 +25,13 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfig
             return null;
         }
 
-        private bool EvaluateTrigger(TriggerModel trigger, string currentPageUrl, 
-            HttpCookieCollection cookieCollection, string userAgent)
+        private bool EvaluateTrigger(TriggerModel trigger, string currentPageUrl, HttpRequestBase request)
         {
             if (trigger.LogicalOperator == LogicalOperatorType.Or)
             {
                 foreach (var part in trigger.TriggerParts)
                 {
-                    if (EvaluateTriggerPart(part, currentPageUrl,cookieCollection, userAgent))
+                    if (EvaluateTriggerPart(part, currentPageUrl, request))
                         return true;
                 }
                 return false;
@@ -37,24 +40,25 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfig
             {
                 foreach (var part in trigger.TriggerParts)
                 {
-                    if (!EvaluateTriggerPart(part, currentPageUrl, cookieCollection, userAgent))
+                    if (!EvaluateTriggerPart(part, currentPageUrl, request))
                         return false;
                 }
                 return true;
             }
         }
 
-        private bool EvaluateTriggerPart(TriggerPart triggerPart, string currentPageUrl,
-            HttpCookieCollection cookieCollection, string userAgent)
+        private bool EvaluateTriggerPart(TriggerPart triggerPart, string currentPageUrl, HttpRequestBase request)
         {
             switch (triggerPart.ValidatorType)
             {
                 case ValidatorType.UrlValidator:
                     return UrlValidatorHelper.Evaluate(triggerPart, currentPageUrl);
                 case ValidatorType.CookieValidator:
-                    return CookieValidatorHelper.Evaluate(triggerPart, cookieCollection);
+                    return CookieValidatorHelper.Evaluate(triggerPart, request.Cookies);
                 case ValidatorType.UserAgentValidator:
-                    return UserAgentValidatorHelper.Evaluate(triggerPart, userAgent);
+                    return UserAgentValidatorHelper.Evaluate(triggerPart, request.UserAgent);
+                case ValidatorType.HttpHeaderValidator:
+                    return HttpHeaderValidatorHelper.Evaluate(triggerPart, request.Headers);
                 default:
                     return false;
             }
@@ -63,8 +67,8 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfig
 
     internal interface IIntegrationEvaluator
     {
-        IntegrationConfigModel GetMatchedIntegrationConfig(CustomerIntegration customerIntegration,
-             string currentPageUrl, HttpCookieCollection cookieCollection, string userAgent);
+        IntegrationConfigModel GetMatchedIntegrationConfig(
+            CustomerIntegration customerIntegration, string currentPageUrl, HttpRequestBase request);
     }
 
     internal class UrlValidatorHelper
@@ -100,10 +104,13 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfig
                 + @"//(?<hostname>[^/\?#]*))?([^\?#]*)"
                 + @"(\?([^#]*))?"
                 + @"(#(.*))?";
+
             Regex re = new Regex(urlMatcher, RegexOptions.ExplicitCapture);
             Match m = re.Match(url);
+
             if (!m.Success)
                 return string.Empty;
+
             return m.Groups["hostname"].Value;
         }
 
@@ -113,17 +120,20 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfig
                 + @"//([^/\?#]*))?(?<path>[^\?#]*)"
                 + @"(\?([^#]*))?"
                 + @"(#(.*))?";
+
             Regex re = new Regex(urlMatcher, RegexOptions.ExplicitCapture);
             Match m = re.Match(url);
+
             if (!m.Success)
                 return string.Empty;
+
             return m.Groups["path"].Value;
         }
     }
 
     internal static class CookieValidatorHelper
     {
-        public static bool Evaluate(TriggerPart triggerPart, System.Web.HttpCookieCollection cookieCollection)
+        public static bool Evaluate(TriggerPart triggerPart, HttpCookieCollection cookieCollection)
         {
             return ComparisonOperatorHelper.Evaluate(triggerPart.Operator,
                 triggerPart.IsNegative,
@@ -132,11 +142,13 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfig
                 triggerPart.ValueToCompare);
         }
 
-        private static string GetCookie(string cookieName, System.Web.HttpCookieCollection cookieCollection)
+        private static string GetCookie(string cookieName, HttpCookieCollection cookieCollection)
         {
             var cookie = cookieCollection?.Get(cookieName);
+
             if (cookie == null)
                 return string.Empty;
+
             return cookieCollection[cookieName].Value;
         }
     }
@@ -148,8 +160,30 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfig
             return ComparisonOperatorHelper.Evaluate(triggerPart.Operator,
                 triggerPart.IsNegative,
                 triggerPart.IsIgnoreCase,
-                userAgent,
+                userAgent ?? string.Empty,
                 triggerPart.ValueToCompare);
+        }
+    }
+
+    internal static class HttpHeaderValidatorHelper
+    {
+        public static bool Evaluate(TriggerPart triggerPart, NameValueCollection httpHeaders)
+        {
+            return ComparisonOperatorHelper.Evaluate(triggerPart.Operator,
+                triggerPart.IsNegative,
+                triggerPart.IsIgnoreCase,
+                GetHttpHeader(triggerPart.HttpHeaderName, httpHeaders),
+                triggerPart.ValueToCompare);
+        }
+
+        private static string GetHttpHeader(string httpHeaderName, NameValueCollection httpHeaders)
+        {
+            var header = httpHeaders?.Get(httpHeaderName);
+
+            if (header == null)
+                return string.Empty;
+
+            return httpHeaders[httpHeaderName];
         }
     }
 
@@ -159,22 +193,19 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfig
         {
             left = left ?? string.Empty;
             right = right ?? string.Empty;
+
             switch (opt)
             {
                 case ComparisonOperatorType.EqualS:
                     return EqualS(left, right, isNegative, isIgnoreCase);
-
                 case ComparisonOperatorType.Contains:
                     return Contains(left, right, isNegative, isIgnoreCase);
-
                 case ComparisonOperatorType.StartsWith:
                     return StartsWith(left, right, isNegative, isIgnoreCase);
                 case ComparisonOperatorType.EndsWith:
                     return EndsWith(left, right, isNegative, isIgnoreCase);
                 case ComparisonOperatorType.MatchesWith:
                     return MatchesWith(left, right, isNegative, isIgnoreCase);
-
-
                 default:
                     return false;
             }
@@ -184,11 +215,14 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfig
         {
             if (right == "*")
                 return true;
+
             var evaluation = false;
+
             if (ignoreCase)
                 evaluation = left.ToUpper().Contains(right.ToUpper());
             else
                 evaluation = left.Contains(right);
+
             if (isNegative)
                 return !evaluation;
             else
@@ -203,7 +237,6 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfig
                 evaluation = left.ToUpper() == right.ToUpper();
             else
                 evaluation = left == right;
-
 
             if (isNegative)
                 return !evaluation;
@@ -234,6 +267,7 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfig
                 evaluation = left.ToUpper().StartsWith(right.ToUpper());
             else
                 evaluation = left.StartsWith(right);
+
             if (isNegative)
                 return !evaluation;
             else
@@ -243,12 +277,14 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfig
         private static bool MatchesWith(string left, string right, bool isNegative, bool isIgnoreCase)
         {
             Regex rg = null;
+
             if (isIgnoreCase)
                 rg = new Regex(right, RegexOptions.IgnoreCase);
             else
                 rg = new Regex(right);
 
             var evaluation = rg.IsMatch(left);
+
             if (isNegative)
                 return !evaluation;
             else

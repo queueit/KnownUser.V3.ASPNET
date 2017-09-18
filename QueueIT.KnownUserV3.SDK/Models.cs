@@ -59,12 +59,4 @@ namespace QueueIT.KnownUserV3.SDK
                 $"&QueueDomain:{QueueDomain}&CookieDomain:{CookieDomain}";
         }
     }
-
-    public class KnowUserException : Exception
-    {
-        public KnowUserException(string message) : base(message)
-        { }
-        public KnowUserException(string message, Exception innerException) : base(message, innerException)
-        { }
-    }
 }
