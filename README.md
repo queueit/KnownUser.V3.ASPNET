@@ -55,7 +55,13 @@ The following method is all that is needed to validate that a user has been thro
 ```
 private void DoValidation()
 {
-    try
+        //adding no cache headers to prevent browsers to cache requests
+        Response.Cache.SetCacheability(HttpCacheability.NoCache);
+        Response.Cache.SetExpires(DateTime.UtcNow.AddHours(-1));
+        Response.Cache.SetNoStore();
+        Response.Cache.SetMaxAge(new TimeSpan(0, 0, 30));
+       //end
+    try
     {
         var customerId = "Your Queue-it customer ID";
         var secretKey = "Your 72 char secrete key as specified in Go Queue-it self-service platform";
@@ -111,6 +117,13 @@ The following is an example of how to specify the configuration in code:
 ```
 private void DoValidationByLocalEventConfig()
 {
+        //adding no cache headers to prevent browsers to cache requests
+        Response.Cache.SetCacheability(HttpCacheability.NoCache);
+        Response.Cache.SetExpires(DateTime.UtcNow.AddHours(-1));
+        Response.Cache.SetNoStore();
+        Response.Cache.SetMaxAge(new TimeSpan(0, 0, 30));
+       //end
+
     try
     {
         var customerId = "Your Queue-it customer ID";
