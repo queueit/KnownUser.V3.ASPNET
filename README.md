@@ -55,7 +55,7 @@ The following method is all that is needed to validate that a user has been thro
 ```
 private void DoValidation()
 {
-        //adding no cache headers to prevent browsers to cache requests
+        //Adding no cache headers to prevent browsers to cache requests
         Response.Cache.SetCacheability(HttpCacheability.NoCache);
         Response.Cache.SetExpires(DateTime.UtcNow.AddHours(-1));
         Response.Cache.SetNoStore();
@@ -117,7 +117,7 @@ The following is an example of how to specify the configuration in code:
 ```
 private void DoValidationByLocalEventConfig()
 {
-        //adding no cache headers to prevent browsers to cache requests
+        //Adding no cache headers to prevent browsers to cache requests
         Response.Cache.SetCacheability(HttpCacheability.NoCache);
         Response.Cache.SetExpires(DateTime.UtcNow.AddHours(-1));
         Response.Cache.SetNoStore();
