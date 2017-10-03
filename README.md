@@ -131,7 +131,7 @@ private void DoValidationByLocalEventConfig()
 
         var queueitToken = Request.QueryString[KnownUser.QueueITTokenKey];
         var pureUrl = Regex.Replace(Request.Url.ToString(), @"([\?&])(" + KnownUser.QueueITTokenKey + "=[^&]*)", string.Empty, RegexOptions.IgnoreCase);
-        var eventConfig = new EventConfig()
+        var eventConfig = new QueueEventConfig()
         {
             EventId = "event1", //ID of the queue to use
             CookieDomain = ".mydomain.com", //Optional - Domain name where the Queue-it session cookie should be saved. Default is to save on the domain of the request
@@ -143,7 +143,7 @@ private void DoValidationByLocalEventConfig()
         };
 
         //Verify if the user has been through the queue
-        var validationResult = KnownUser.ValidateRequestByLocalEventConfig(pureUrl, queueitToken, eventConfig, customerId, secretKey);
+        var validationResult = KnownUser.ResolveQueueRequestByLocalConfig(pureUrl, queueitToken, eventConfig, customerId, secretKey);
 
         if (validationResult.DoRedirect)
         {
@@ -156,6 +156,10 @@ private void DoValidationByLocalEventConfig()
             if (HttpContext.Current.Request.Url.ToString().Contains(KnownUser.QueueITTokenKey))
                 Response.Redirect(pureUrl);
         }
+    }
+    catch (System.Threading.ThreadAbortException)
+    {
+        //Response.Redirect will raise System.Threading.ThreadAbortException to end the exceution, no need to log the error
     }
     catch (Exception ex)
     {
