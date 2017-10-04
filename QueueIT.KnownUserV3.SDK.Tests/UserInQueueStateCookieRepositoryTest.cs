@@ -33,7 +33,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             Assert.True(cookies[cookieKey].Expires.Subtract(DateTime.UtcNow.AddDays(1)) < TimeSpan.FromMinutes(1));
 
             Assert.True(
-                DateTimeHelper.GetUnixTimeStampAsDate(cookies[cookieKey]["Expires"])
+                DateTimeHelper.GetUnixTimeStampAsDate(CookieHelper.ToNameValueCollectionFromValue(cookies[cookieKey].Value)["Expires"])
                 .Subtract(DateTime.UtcNow.AddMinutes(10)) < TimeSpan.FromSeconds(10));
 
             Assert.True(cookies[cookieKey].HttpOnly);
@@ -285,7 +285,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             Assert.True(cookies[cookieKey].Expires.Subtract(DateTime.UtcNow.AddDays(-1)) < TimeSpan.FromMinutes(1));
             Assert.True(cookies[cookieKey].Domain == cookieDomain);            
         }
-        
+
         [Fact]
         public void ExtendQueueCookie_CookieExist_Test()
         {
@@ -314,7 +314,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             testObject.ExtendQueueCookie(eventId, 12, secretKey);
 
             Assert.True(
-                DateTimeHelper.GetUnixTimeStampAsDate(cookies[cookieKey]["Expires"])
+                DateTimeHelper.GetUnixTimeStampAsDate(CookieHelper.ToNameValueCollectionFromValue(cookies[cookieKey].Value)["Expires"])
                 .Subtract(DateTime.UtcNow.AddMinutes(12)) < TimeSpan.FromSeconds(10));
             Assert.True(cookies[cookieKey].Domain == cookieDomain);
 

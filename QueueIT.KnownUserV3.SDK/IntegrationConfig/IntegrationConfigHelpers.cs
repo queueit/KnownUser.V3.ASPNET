@@ -172,18 +172,8 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfig
             return ComparisonOperatorHelper.Evaluate(triggerPart.Operator,
                 triggerPart.IsNegative,
                 triggerPart.IsIgnoreCase,
-                GetHttpHeader(triggerPart.HttpHeaderName, httpHeaders),
+                httpHeaders?.Get(triggerPart.HttpHeaderName) ?? string.Empty,
                 triggerPart.ValueToCompare);
-        }
-
-        private static string GetHttpHeader(string httpHeaderName, NameValueCollection httpHeaders)
-        {
-            var header = httpHeaders?.Get(httpHeaderName);
-
-            if (header == null)
-                return string.Empty;
-
-            return httpHeaders[httpHeaderName];
         }
     }
 

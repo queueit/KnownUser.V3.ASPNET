@@ -15,77 +15,84 @@ namespace QueueIT.KnownUserV3.SDK
             string currentUrlWithoutQueueITToken, string queueitToken,
             CustomerIntegration customerIntegrationInfo, string customerId, string secretKey)
         {
-            var isDebug = GetIsDebug(queueitToken, secretKey);
-            if (isDebug)
+            var debugEntries = new Dictionary<string, string>();
+
+            try
             {
-                var dic = new Dictionary<string, string>();
-                dic.Add("configVersion", customerIntegrationInfo.Version.ToString());
-                dic.Add("pureUrl", currentUrlWithoutQueueITToken);
-                dic.Add("queueitToken", queueitToken);
-                dic.Add("OriginalURL", GetHttpContextBase().Request.Url.AbsoluteUri);
-                DoCookieLog(dic);
-            }
-            if (string.IsNullOrEmpty(currentUrlWithoutQueueITToken))
-                throw new ArgumentException("currentUrlWithoutQueueITToken can not be null or empty.");
-            if (customerIntegrationInfo == null)
-                throw new ArgumentException("customerIntegrationInfo can not be null.");
-
-            var configEvaluater = new IntegrationEvaluator();
-
-            var matchedConfig = configEvaluater.GetMatchedIntegrationConfig(
-                customerIntegrationInfo,
-                currentUrlWithoutQueueITToken,
-                GetHttpContextBase()?.Request);
-
-            if (isDebug)
-            {
-                DoCookieLog(new Dictionary<string, string>() { { "matchedConfig", matchedConfig != null ? matchedConfig.Name : "NULL" } });
-            }
-            if (matchedConfig == null)
-                return new RequestValidationResult(null);
-
-            if (string.IsNullOrEmpty(matchedConfig.ActionType) || matchedConfig.ActionType == ActionType.QueueAction)
-            {
-                var targetUrl = "";
-                switch (matchedConfig.RedirectLogic)
+                var isDebug = GetIsDebug(queueitToken, secretKey);
+                if (isDebug)
                 {
-                    case "ForcedTargetUrl":
-                    case "ForecedTargetUrl":
-                        targetUrl = matchedConfig.ForcedTargetUrl;
-                        break;
-                    case "EventTargetUrl":
-                        targetUrl = "";
-                        break;
-                    default:
-                        targetUrl = currentUrlWithoutQueueITToken;
-                        break;
+                    debugEntries["ConfigVersion"] = customerIntegrationInfo.Version.ToString();
+                    debugEntries["PureUrl"] = currentUrlWithoutQueueITToken;
+                    debugEntries["QueueitToken"] = queueitToken;
+                    debugEntries["OriginalUrl"] = GetHttpContextBase().Request.Url.AbsoluteUri;                    
                 }
+                if (string.IsNullOrEmpty(currentUrlWithoutQueueITToken))
+                    throw new ArgumentException("currentUrlWithoutQueueITToken can not be null or empty.");
+                if (customerIntegrationInfo == null)
+                    throw new ArgumentException("customerIntegrationInfo can not be null.");
 
-                var queueEventConfig = new QueueEventConfig()
+                var configEvaluater = new IntegrationEvaluator();
+
+                var matchedConfig = configEvaluater.GetMatchedIntegrationConfig(
+                    customerIntegrationInfo,
+                    currentUrlWithoutQueueITToken,
+                    GetHttpContextBase()?.Request);
+
+                if (isDebug)
                 {
-                    QueueDomain = matchedConfig.QueueDomain,
-                    Culture = matchedConfig.Culture,
-                    EventId = matchedConfig.EventId,
-                    ExtendCookieValidity = matchedConfig.ExtendCookieValidity.Value,
-                    LayoutName = matchedConfig.LayoutName,
-                    CookieValidityMinute = matchedConfig.CookieValidityMinute.Value,
-                    CookieDomain = matchedConfig.CookieDomain,
-                    Version = customerIntegrationInfo.Version
-                };
+                    debugEntries["MatchedConfig"] = matchedConfig != null ? matchedConfig.Name : "NULL";                    
+                }
+                if (matchedConfig == null)
+                    return new RequestValidationResult(null);
 
-                return ResolveQueueRequestByLocalConfig(targetUrl, queueitToken, queueEventConfig, customerId, secretKey);
+                if (string.IsNullOrEmpty(matchedConfig.ActionType) || matchedConfig.ActionType == ActionType.QueueAction)
+                {
+                    var targetUrl = "";
+                    switch (matchedConfig.RedirectLogic)
+                    {
+                        case "ForcedTargetUrl":
+                        case "ForecedTargetUrl":
+                            targetUrl = matchedConfig.ForcedTargetUrl;
+                            break;
+                        case "EventTargetUrl":
+                            targetUrl = "";
+                            break;
+                        default:
+                            targetUrl = currentUrlWithoutQueueITToken;
+                            break;
+                    }
+
+                    var queueEventConfig = new QueueEventConfig()
+                    {
+                        QueueDomain = matchedConfig.QueueDomain,
+                        Culture = matchedConfig.Culture,
+                        EventId = matchedConfig.EventId,
+                        ExtendCookieValidity = matchedConfig.ExtendCookieValidity.Value,
+                        LayoutName = matchedConfig.LayoutName,
+                        CookieValidityMinute = matchedConfig.CookieValidityMinute.Value,
+                        CookieDomain = matchedConfig.CookieDomain,
+                        Version = customerIntegrationInfo.Version
+                    };
+
+                    return ResolveQueueRequestByLocalConfig(targetUrl, queueitToken, queueEventConfig, customerId, secretKey, debugEntries);
+                }
+                else // CancelQueueAction
+                {
+                    var cancelEventConfig = new CancelEventConfig()
+                    {
+                        QueueDomain = matchedConfig.QueueDomain,
+                        EventId = matchedConfig.EventId,
+                        Version = customerIntegrationInfo.Version,
+                        CookieDomain = matchedConfig.CookieDomain
+                    };
+
+                    return CancelRequestByLocalConfig(currentUrlWithoutQueueITToken, queueitToken, cancelEventConfig, customerId, secretKey, debugEntries);
+                }
             }
-            else // CancelQueueAction
+            finally
             {
-                var cancelEventConfig = new CancelEventConfig()
-                {
-                    QueueDomain = matchedConfig.QueueDomain,
-                    EventId = matchedConfig.EventId,
-                    Version = customerIntegrationInfo.Version,
-                    CookieDomain = matchedConfig.CookieDomain
-                };
-
-                return CancelRequestByLocalConfig(currentUrlWithoutQueueITToken, queueitToken, cancelEventConfig, customerId, secretKey);
+                SetDebugCookie(debugEntries);
             }
         }
 
@@ -93,14 +100,28 @@ namespace QueueIT.KnownUserV3.SDK
             string targetUrl, string queueitToken, CancelEventConfig cancelConfig,
             string customerId, string secretKey)
         {
+            var debugEntries = new Dictionary<string, string>();
+
+            try
+            {
+                return CancelRequestByLocalConfig(targetUrl, queueitToken, cancelConfig, customerId, secretKey, debugEntries);
+            }
+            finally
+            {
+                SetDebugCookie(debugEntries);
+            }
+        }
+
+        private static RequestValidationResult CancelRequestByLocalConfig(
+            string targetUrl, string queueitToken, CancelEventConfig cancelConfig,
+            string customerId, string secretKey, Dictionary<string, string> debugEntries)
+        {
             if (GetIsDebug(queueitToken, secretKey))
             {
-                var dic = new Dictionary<string, string>();
-                dic.Add("targetUrl", targetUrl);
-                dic.Add("queueitToken", queueitToken);
-                dic.Add("cancelConfig", cancelConfig != null ? cancelConfig.ToString() : "NULL");
-                dic.Add("OriginalURL", GetHttpContextBase().Request.Url.AbsoluteUri);
-                DoCookieLog(dic);
+                debugEntries["TargetUrl"] = targetUrl;
+                debugEntries["QueueitToken"] = queueitToken;
+                debugEntries["CancelConfig"] = cancelConfig != null ? cancelConfig.ToString() : "NULL";
+                debugEntries["OriginalUrl"] = GetHttpContextBase().Request.Url.AbsoluteUri;                
             }
             if (string.IsNullOrEmpty(targetUrl))
                 throw new ArgumentException("targeturl can not be null or empty.");
@@ -123,14 +144,28 @@ namespace QueueIT.KnownUserV3.SDK
             string targetUrl, string queueitToken, QueueEventConfig queueConfig,
             string customerId, string secretKey)
         {
+            var debugEntries = new Dictionary<string, string>();
+
+            try
+            {
+                return ResolveQueueRequestByLocalConfig(targetUrl, queueitToken, queueConfig, customerId, secretKey, debugEntries);
+            }            
+            finally
+            {
+                SetDebugCookie(debugEntries);
+            }
+        }
+
+        private static RequestValidationResult ResolveQueueRequestByLocalConfig(
+            string targetUrl, string queueitToken, QueueEventConfig queueConfig,
+            string customerId, string secretKey, Dictionary<string, string> debugEntries)
+        {
             if (GetIsDebug(queueitToken, secretKey))
             {
-                var dic = new Dictionary<string, string>();
-                dic.Add("targetUrl", targetUrl);
-                dic.Add("queueitToken", queueitToken);
-                dic.Add("queueConfig", queueConfig != null ? queueConfig.ToString() : "NULL");
-                dic.Add("OriginalURL", GetHttpContextBase().Request.Url.AbsoluteUri);
-                DoCookieLog(dic);
+                debugEntries["TargetUrl"] = targetUrl;
+                debugEntries["QueueitToken"] = queueitToken;
+                debugEntries["QueueConfig"] = queueConfig != null ? queueConfig.ToString() : "NULL";
+                debugEntries["OriginalUrl"] = GetHttpContextBase().Request.Url.AbsoluteUri;                
             }
             if (string.IsNullOrEmpty(customerId))
                 throw new ArgumentException("customerId can not be null or empty.");
@@ -185,32 +220,30 @@ namespace QueueIT.KnownUserV3.SDK
             return _HttpContextBase;
         }
 
-        internal static void DoCookieLog(Dictionary<string, string> dic)
+        internal static void SetDebugCookie(Dictionary<string, string> debugEntries)
         {
-            if (!GetHttpContextBase().Response.Cookies.AllKeys.Any(key => key == QueueITDebugKey))
-            {
-                var cookie = new HttpCookie(QueueITDebugKey);
-                GetHttpContextBase().Response.Cookies.Add(cookie);
-            }
+            if (!debugEntries.Any())
+                return;
+            
+            if (GetHttpContextBase().Response.Cookies.AllKeys.Any(key => key == QueueITDebugKey))
+                GetHttpContextBase().Response.Cookies.Remove(QueueITDebugKey);
 
-            var debugCookie = GetHttpContextBase().Response.Cookies[QueueITDebugKey];
-            foreach (var nameVal in dic)
-            {
-                if (!debugCookie.Values.AllKeys.Any(key => key == nameVal.Key))
-                {
-                    debugCookie.Values.Add(nameVal.Key, nameVal.Value);
-                }
-            }
+            string cookieValue = string.Empty;
+            foreach (var nameVal in debugEntries)
+                cookieValue += $"{nameVal.Key}={nameVal.Value}|";
+
+            cookieValue = HttpUtility.UrlEncode(cookieValue.TrimEnd('|'));
+            GetHttpContextBase().Response.Cookies.Add(new HttpCookie(QueueITDebugKey, cookieValue));
         }
+
         private static bool GetIsDebug(string queueitToken, string secretKey)
         {
             var qParams = QueueParameterHelper.ExtractQueueParams(queueitToken);
-            if (qParams != null && qParams.RedirectType != null && qParams.RedirectType.ToLower() == "debug")
-            {
-                return HashHelper.GenerateSHA256Hash(secretKey, qParams.QueueITTokenWithoutHash) == qParams.HashCode;
-            }
-            return false;
 
+            if (qParams != null && qParams.RedirectType != null && qParams.RedirectType.ToLower() == "debug")            
+                return HashHelper.GenerateSHA256Hash(secretKey, qParams.QueueITTokenWithoutHash) == qParams.HashCode;
+            
+            return false;
         }
     }
 }

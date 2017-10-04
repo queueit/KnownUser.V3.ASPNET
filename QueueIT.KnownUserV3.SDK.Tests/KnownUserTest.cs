@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Web;
 using Xunit;
 using System.Collections.Specialized;
+using System.Linq;
 
 namespace QueueIT.KnownUserV3.SDK.Tests
 {
@@ -846,20 +847,15 @@ namespace QueueIT.KnownUserV3.SDK.Tests
                 .ValidateRequestByIntegrationConfig($"http://test.com?event1=true",
                 queueitToken, customerIntegration, "customerId", "secretKey");
 
-            Assert.True(httpContextMock.MockResponse.Cookies["queueitdebug"].Values["pureUrl"]== 
-                "http://test.com?event1=true");
-            Assert.True(httpContextMock.MockResponse.Cookies["queueitdebug"].Values["queueitToken"] ==
-                queueitToken);
-            Assert.True(httpContextMock.MockResponse.Cookies["queueitdebug"].Values["configVersion"] ==
-                "3");
-            Assert.True(httpContextMock.MockResponse.Cookies["queueitdebug"].Values["OriginalUrl"] ==
-                "http://test.com/?event1=true&queueittoken=queueittokenvalue");
-            Assert.True(httpContextMock.MockResponse.Cookies["queueitdebug"].Values["matchedConfig"] ==
-                "event1action");
-            Assert.True(httpContextMock.MockResponse.Cookies["queueitdebug"].Values["targetUrl"] ==
-                "http://test.com?event1=true");
-            Assert.True(httpContextMock.MockResponse.Cookies["queueitdebug"].Values["queueConfig"] ==
-                "EventId:event1&Version:3&QueueDomain:knownusertest.queue-it.net&CookieDomain:.test.com&ExtendCookieValidity:True&CookieValidityMinute:20&LayoutName:Christmas Layout by Queue-it&Culture:da-DK");
+            // Assert
+            var cookieValues = HttpUtility.UrlDecode(httpContextMock.MockResponse.Cookies["queueitdebug"].Value).Split('|');
+            Assert.True(cookieValues.Any(v => v == $"PureUrl=http://test.com?event1=true"));
+            Assert.True(cookieValues.Any(v => v == $"ConfigVersion=3"));
+            Assert.True(cookieValues.Any(v => v == $"MatchedConfig=event1action"));
+            Assert.True(cookieValues.Any(v => v == $"QueueitToken={queueitToken}"));
+            Assert.True(cookieValues.Any(v => v == $"OriginalUrl=http://test.com/?event1=true&queueittoken=queueittokenvalue"));
+            Assert.True(cookieValues.Any(v => v == $"TargetUrl=http://test.com?event1=true"));
+            Assert.True(cookieValues.Any(v => v == $"QueueConfig=EventId:event1&Version:3&QueueDomain:knownusertest.queue-it.net&CookieDomain:.test.com&ExtendCookieValidity:True&CookieValidityMinute:20&LayoutName:Christmas Layout by Queue-it&Culture:da-DK"));            
         }
 
         [Fact]
@@ -889,9 +885,8 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             UserInQueueServiceMock mock = new UserInQueueServiceMock();
             KnownUser._UserInQueueService = (mock);
 
-
             CustomerIntegration customerIntegration = new CustomerIntegration();
-            customerIntegration.Integrations = new IntegrationConfigModel[] {  };
+            customerIntegration.Integrations = new IntegrationConfigModel[] { };
             customerIntegration.Version = 10;
 
             var queueitToken = QueueITTokenGenerator.GenerateToken(DateTime.UtcNow, "event1",
@@ -901,17 +896,15 @@ namespace QueueIT.KnownUserV3.SDK.Tests
                 .ValidateRequestByIntegrationConfig("http://test.com?event1=true",
                 queueitToken, customerIntegration, "customerId", "secretKey");
 
-            Assert.True(httpContextMock.MockResponse.Cookies["queueitdebug"].Values["pureUrl"] ==
-                "http://test.com?event1=true");
-            Assert.True(httpContextMock.MockResponse.Cookies["queueitdebug"].Values["queueitToken"] ==
-                queueitToken);
-            Assert.True(httpContextMock.MockResponse.Cookies["queueitdebug"].Values["configVersion"] ==
-                "10");
-            Assert.True(httpContextMock.MockResponse.Cookies["queueitdebug"].Values["OriginalUrl"] ==
-                "http://test.com/?event1=true&queueittoken=queueittokenvalue");
-            Assert.True(httpContextMock.MockResponse.Cookies["queueitdebug"].Values["matchedConfig"] ==
-                "NULL");
-           }
+            // Assert
+            var cookieValues = HttpUtility.UrlDecode(httpContextMock.MockResponse.Cookies["queueitdebug"].Value).Split('|');
+            Assert.True(cookieValues.Any(v => v == $"PureUrl=http://test.com?event1=true"));
+            Assert.True(cookieValues.Any(v => v == $"QueueitToken={queueitToken}"));
+            Assert.True(cookieValues.Any(v => v == $"ConfigVersion=10"));
+            Assert.True(cookieValues.Any(v => v == $"OriginalUrl=http://test.com/?event1=true&queueittoken=queueittokenvalue"));
+            Assert.True(cookieValues.Any(v => v == $"MatchedConfig=NULL"));
+        }
+
         [Fact]
         public void ValidateRequestByIntegrationConfig_Debug_WithoutMatch_NotValidHash()
         {
@@ -998,15 +991,12 @@ namespace QueueIT.KnownUserV3.SDK.Tests
                 .ResolveQueueRequestByLocalConfig("http://test.com?event1=true",
                 queueitToken, eventConfig, "customerId", "secretKey");
 
-
-            Assert.True(httpContextMock.MockResponse.Cookies["queueitdebug"].Values["queueitToken"] ==
-                queueitToken);
-            Assert.True(httpContextMock.MockResponse.Cookies["queueitdebug"].Values["OriginalUrl"] ==
-                "http://test.com/?event1=true&queueittoken=queueittokenvalue");
-            Assert.True(httpContextMock.MockResponse.Cookies["queueitdebug"].Values["targetUrl"] ==
-               "http://test.com?event1=true");
-            Assert.True(httpContextMock.MockResponse.Cookies["queueitdebug"].Values["queueConfig"] ==
-                "EventId:eventId&Version:12&QueueDomain:queueDomain&CookieDomain:cookieDomain&ExtendCookieValidity:True&CookieValidityMinute:10&LayoutName:layoutName&Culture:culture");
+            // Assert
+            var cookieValues = HttpUtility.UrlDecode(httpContextMock.MockResponse.Cookies["queueitdebug"].Value).Split('|');
+            Assert.True(cookieValues.Any(v => v == $"QueueitToken={queueitToken}"));
+            Assert.True(cookieValues.Any(v => v == $"OriginalUrl=http://test.com/?event1=true&queueittoken=queueittokenvalue"));
+            Assert.True(cookieValues.Any(v => v == $"TargetUrl=http://test.com?event1=true"));
+            Assert.True(cookieValues.Any(v => v == $"QueueConfig=EventId:eventId&Version:12&QueueDomain:queueDomain&CookieDomain:cookieDomain&ExtendCookieValidity:True&CookieValidityMinute:10&LayoutName:layoutName&Culture:culture"));            
         }
 
         [Fact]
@@ -1051,15 +1041,12 @@ namespace QueueIT.KnownUserV3.SDK.Tests
                 .CancelRequestByLocalConfig("http://test.com?event1=true",
                 queueitToken, eventConfig, "customerId", "secretKey");
 
-
-            Assert.True(httpContextMock.MockResponse.Cookies["queueitdebug"].Values["queueitToken"] ==
-                queueitToken);
-            Assert.True(httpContextMock.MockResponse.Cookies["queueitdebug"].Values["OriginalUrl"] ==
-                "http://test.com/?event1=true&queueittoken=queueittokenvalue");
-            Assert.True(httpContextMock.MockResponse.Cookies["queueitdebug"].Values["targetUrl"] ==
-               "http://test.com?event1=true");
-            Assert.True(httpContextMock.MockResponse.Cookies["queueitdebug"].Values["cancelConfig"] ==
-                "EventId:eventId&Version:12&QueueDomain:queueDomain&CookieDomain:cookieDomain");
+            // Assert
+            var cookieValues = HttpUtility.UrlDecode(httpContextMock.MockResponse.Cookies["queueitdebug"].Value).Split('|');
+            Assert.True(cookieValues.Any(v => v == $"QueueitToken={queueitToken}"));
+            Assert.True(cookieValues.Any(v => v == $"OriginalUrl=http://test.com/?event1=true&queueittoken=queueittokenvalue"));
+            Assert.True(cookieValues.Any(v => v == $"TargetUrl=http://test.com?event1=true"));
+            Assert.True(cookieValues.Any(v => v == $"CancelConfig=EventId:eventId&Version:12&QueueDomain:queueDomain&CookieDomain:cookieDomain"));
         }
     }
 }

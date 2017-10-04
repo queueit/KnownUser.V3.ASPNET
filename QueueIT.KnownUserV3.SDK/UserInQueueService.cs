@@ -28,7 +28,7 @@ namespace QueueIT.KnownUserV3.SDK
 
     internal class UserInQueueService : IUserInQueueService
     {
-        internal const string SDK_VERSION = "3.3.0";
+        internal const string SDK_VERSION = "3.3.1";
         private readonly IUserInQueueStateRepository _userInQueueStateRepository;
 
         public UserInQueueService(IUserInQueueStateRepository queueStateRepository)
@@ -115,7 +115,7 @@ namespace QueueIT.KnownUserV3.SDK
             if (!domainAlias.EndsWith("/"))
                 domainAlias = domainAlias + "/";
 
-            var redirectUrl = "https://" + domainAlias + $"error/{errorCode}?" + query;
+            var redirectUrl = $"https://{domainAlias}error/{errorCode}/?{query}";
 
             return new RequestValidationResult(ActionType.QueueAction)
             {

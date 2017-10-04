@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Web;
 
@@ -19,7 +20,7 @@ namespace QueueIT.KnownUserV3.SDK
             string customerSecretKey);
 
         void CancelQueueCookie(
-            string eventId, 
+            string eventId,
             string cookieDomain);
 
         void ExtendQueueCookie(
@@ -74,10 +75,12 @@ namespace QueueIT.KnownUserV3.SDK
                 HttpCookie cookie = _httpContext.Request.Cookies.Get(cookieKey);
                 if (cookie == null)
                     return new StateInfo(false, string.Empty, false);
-                if (!IsCookieValid(secretKey, cookie, eventId))
+
+                var cookieValues = CookieHelper.ToNameValueCollectionFromValue(cookie.Value);
+                if (!IsCookieValid(secretKey, cookieValues, eventId))
                     return new StateInfo(false, string.Empty, false);
 
-                return new StateInfo(true, cookie[_QueueIdKey], bool.Parse(cookie[_IsCookieExtendableKey])); ;
+                return new StateInfo(true, cookieValues[_QueueIdKey], bool.Parse(cookieValues[_IsCookieExtendableKey])); ;
             }
             catch (Exception)
             {
@@ -107,7 +110,7 @@ namespace QueueIT.KnownUserV3.SDK
 
             _httpContext.Response.Cookies.Add(cookie);
         }
-
+        
         public void ExtendQueueCookie(
             string eventId,
             int cookieValidityMinute,
@@ -119,10 +122,12 @@ namespace QueueIT.KnownUserV3.SDK
             if (cookie == null)
                 return;
 
-            if (!IsCookieValid(secretKey, cookie, eventId))
+            var cookieValues = CookieHelper.ToNameValueCollectionFromValue(cookie.Value);
+
+            if (!IsCookieValid(secretKey, cookieValues, eventId))
                 return;
 
-            var newCookie = CreateCookie(eventId, cookie.Values[_QueueIdKey], bool.Parse(cookie.Values[_IsCookieExtendableKey]),
+            var newCookie = CreateCookie(eventId, cookieValues[_QueueIdKey], bool.Parse(cookieValues[_IsCookieExtendableKey]),
                 cookieValidityMinute, cookie.Domain, secretKey);
 
             if (_httpContext.Response.Cookies.AllKeys.Any(key => key == cookieKey))
@@ -143,11 +148,13 @@ namespace QueueIT.KnownUserV3.SDK
             var expirationTime = DateTime.UtcNow.Add(TimeSpan.FromMinutes(cookieValidityMinute));
             var expirationTimeString = DateTimeHelper.GetUnixTimeStampFromDate(expirationTime).ToString();
 
-            HttpCookie cookie = new HttpCookie(cookieKey);
-            cookie.Values[_IsCookieExtendableKey] = isCookieExtendable.ToString();
-            cookie.Values[_HashKey] = GenerateHash(queueId, isCookieExtendable.ToString(), expirationTimeString, secretKey);
-            cookie.Values[_ExpiresKey] = expirationTimeString;
-            cookie.Values[_QueueIdKey] = queueId;
+            NameValueCollection cookieValues = new NameValueCollection();
+            cookieValues.Add(_IsCookieExtendableKey, isCookieExtendable.ToString());
+            cookieValues.Add(_HashKey, GenerateHash(queueId, isCookieExtendable.ToString(), expirationTimeString, secretKey));
+            cookieValues.Add(_ExpiresKey, expirationTimeString);
+            cookieValues.Add(_QueueIdKey, queueId);
+
+            HttpCookie cookie = new HttpCookie(cookieKey, CookieHelper.ToValueFromNameValueCollection(cookieValues));
 
             if (!string.IsNullOrEmpty(cookieDomain))
                 cookie.Domain = cookieDomain;
@@ -160,13 +167,13 @@ namespace QueueIT.KnownUserV3.SDK
 
         private bool IsCookieValid(
             string secretKey,
-            HttpCookie cookie,
+            NameValueCollection cookieValues,
             string eventId)
         {
-            var storedHash = cookie.Values[_HashKey];
-            var expirationTimeString = cookie.Values[_ExpiresKey];
-            var cookieExtensibility = cookie.Values[_IsCookieExtendableKey];
-            var queueId = cookie.Values[_QueueIdKey];
+            var storedHash = cookieValues[_HashKey];
+            var expirationTimeString = cookieValues[_ExpiresKey];
+            var cookieExtensibility = cookieValues[_IsCookieExtendableKey];
+            var queueId = cookieValues[_QueueIdKey];
 
             var expectedHash = GenerateHash(queueId, cookieExtensibility, expirationTimeString, secretKey);
             if (!expectedHash.Equals(storedHash))

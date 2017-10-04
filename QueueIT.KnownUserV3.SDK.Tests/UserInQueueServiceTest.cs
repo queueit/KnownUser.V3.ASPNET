@@ -140,7 +140,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             queueitToken = queueitToken.Replace("False", "True");
             var targetUrl = "http://test.test.com?b=h";
             var knownUserVersion = UserInQueueService.SDK_VERSION;
-            var expectedErrorUrl = $"https://testDomain.com/error/hash?c=testCustomer&e=e1" +
+            var expectedErrorUrl = $"https://testDomain.com/error/hash/?c=testCustomer&e=e1" +
                 $"&ver=v3-aspnet-{knownUserVersion}"
                 + $"&cver=100"
                 + $"&queueittoken={queueitToken}"
@@ -191,7 +191,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests
                             );
             var targetUrl = "http://test.test.com?b=h";
             var knownUserVersion = UserInQueueService.SDK_VERSION;
-            var expectedErrorUrl = $"https://testDomain.com/error/timestamp?c=testCustomer&e=e1" +
+            var expectedErrorUrl = $"https://testDomain.com/error/timestamp/?c=testCustomer&e=e1" +
                 $"&ver=v3-aspnet-{knownUserVersion}"
                 + $"&cver=100"
                 + $"&queueittoken={queueitToken}"
@@ -242,7 +242,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests
 
             var targetUrl = "http://test.test.com?b=h";
             var knownUserVersion = UserInQueueService.SDK_VERSION;
-            var expectedErrorUrl = $"https://testDomain.com/error/eventid?c=testCustomer&e=e2" +
+            var expectedErrorUrl = $"https://testDomain.com/error/eventid/?c=testCustomer&e=e2" +
                 $"&ver=v3-aspnet-{knownUserVersion}" + "&cver=10"
                 + $"&queueittoken={queueitToken}"
                 + $"&t={HttpUtility.UrlEncode(targetUrl)}";
@@ -447,7 +447,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             var result = testObject.ValidateQueueRequest(targetUrl, "ts_sasa~cv_adsasa~ce_falwwwse~q_944c1f44-60dd-4e37-aabc-f3e4bb1c8895", config, "testCustomer", "key");
 
             Assert.True(result.DoRedirect);
-            Assert.True(result.RedirectUrl.StartsWith($"https://testDomain.com/error/hash?c=testCustomer&e=e1&ver=v3-aspnet-{knownUserVersion}&cver=10&l=testlayout&queueittoken=ts_sasa~cv_adsasa~ce_falwwwse~q_944c1f44-60dd-4e37-aabc-f3e4bb1c8895&"));
+            Assert.True(result.RedirectUrl.StartsWith($"https://testDomain.com/error/hash/?c=testCustomer&e=e1&ver=v3-aspnet-{knownUserVersion}&cver=10&l=testlayout&queueittoken=ts_sasa~cv_adsasa~ce_falwwwse~q_944c1f44-60dd-4e37-aabc-f3e4bb1c8895&"));
             cookieProviderMock.AssertWasNotCalled(stub =>
                                 stub.Store(null, null, true, null, 0, null), options => options.IgnoreArguments());
             Assert.True(config.EventId == result.EventId);

@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Security.Cryptography;
 using System.Text;
 using System.Web;
@@ -139,5 +141,39 @@ namespace QueueIT.KnownUserV3.SDK
         public string QueueITTokenWithoutHash { get; set; }
         public string QueueId { get; set; }
         public string RedirectType { get; set; }
+    }
+
+    internal class CookieHelper
+    {
+        public static NameValueCollection ToNameValueCollectionFromValue(string cookieValue)
+        {
+            try
+            {
+                NameValueCollection result = new NameValueCollection();
+                var decoded = HttpUtility.UrlDecode(cookieValue);
+                var items = decoded.Split('&');
+                foreach (var item in items)
+                {
+                    var keyValue = item.Split('=');
+                    result.Add(keyValue[0], keyValue[1]);
+                }
+                return result;
+            }
+            catch
+            {
+                return new NameValueCollection();
+            }
+        }
+
+        public static string ToValueFromNameValueCollection(NameValueCollection cookieValues)
+        {
+            List<string> values = new List<string>();
+
+            foreach (string key in cookieValues)
+                values.Add($"{key}={cookieValues[key]}");
+
+            var result = string.Join("&", values);
+            return HttpUtility.UrlEncode(result);
+        }
     }
 }
