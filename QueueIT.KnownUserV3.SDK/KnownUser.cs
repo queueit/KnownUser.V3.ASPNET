@@ -25,7 +25,9 @@ namespace QueueIT.KnownUserV3.SDK
                     debugEntries["ConfigVersion"] = customerIntegrationInfo.Version.ToString();
                     debugEntries["PureUrl"] = currentUrlWithoutQueueITToken;
                     debugEntries["QueueitToken"] = queueitToken;
-                    debugEntries["OriginalUrl"] = GetHttpContextBase().Request.Url.AbsoluteUri;                    
+                    debugEntries["OriginalUrl"] = GetHttpContextBase().Request.Url.AbsoluteUri;
+
+                    LogExtraRequestDetails(debugEntries);
                 }
                 if (string.IsNullOrEmpty(currentUrlWithoutQueueITToken))
                     throw new ArgumentException("currentUrlWithoutQueueITToken can not be null or empty.");
@@ -41,7 +43,7 @@ namespace QueueIT.KnownUserV3.SDK
 
                 if (isDebug)
                 {
-                    debugEntries["MatchedConfig"] = matchedConfig != null ? matchedConfig.Name : "NULL";                    
+                    debugEntries["MatchedConfig"] = matchedConfig != null ? matchedConfig.Name : "NULL";
                 }
                 if (matchedConfig == null)
                     return new RequestValidationResult(null);
@@ -121,7 +123,9 @@ namespace QueueIT.KnownUserV3.SDK
                 debugEntries["TargetUrl"] = targetUrl;
                 debugEntries["QueueitToken"] = queueitToken;
                 debugEntries["CancelConfig"] = cancelConfig != null ? cancelConfig.ToString() : "NULL";
-                debugEntries["OriginalUrl"] = GetHttpContextBase().Request.Url.AbsoluteUri;                
+                debugEntries["OriginalUrl"] = GetHttpContextBase().Request.Url.AbsoluteUri;
+
+                LogExtraRequestDetails(debugEntries);
             }
             if (string.IsNullOrEmpty(targetUrl))
                 throw new ArgumentException("targeturl can not be null or empty.");
@@ -149,7 +153,7 @@ namespace QueueIT.KnownUserV3.SDK
             try
             {
                 return ResolveQueueRequestByLocalConfig(targetUrl, queueitToken, queueConfig, customerId, secretKey, debugEntries);
-            }            
+            }
             finally
             {
                 SetDebugCookie(debugEntries);
@@ -165,7 +169,9 @@ namespace QueueIT.KnownUserV3.SDK
                 debugEntries["TargetUrl"] = targetUrl;
                 debugEntries["QueueitToken"] = queueitToken;
                 debugEntries["QueueConfig"] = queueConfig != null ? queueConfig.ToString() : "NULL";
-                debugEntries["OriginalUrl"] = GetHttpContextBase().Request.Url.AbsoluteUri;                
+                debugEntries["OriginalUrl"] = GetHttpContextBase().Request.Url.AbsoluteUri;
+
+                LogExtraRequestDetails(debugEntries);
             }
             if (string.IsNullOrEmpty(customerId))
                 throw new ArgumentException("customerId can not be null or empty.");
@@ -215,7 +221,7 @@ namespace QueueIT.KnownUserV3.SDK
 
         private static HttpContextBase GetHttpContextBase()
         {
-            if (_UserInQueueService == null)
+            if (_HttpContextBase == null)
                 return new HttpContextWrapper(HttpContext.Current);
             return _HttpContextBase;
         }
@@ -224,7 +230,7 @@ namespace QueueIT.KnownUserV3.SDK
         {
             if (!debugEntries.Any())
                 return;
-            
+
             if (GetHttpContextBase().Response.Cookies.AllKeys.Any(key => key == QueueITDebugKey))
                 GetHttpContextBase().Response.Cookies.Remove(QueueITDebugKey);
 
@@ -240,10 +246,21 @@ namespace QueueIT.KnownUserV3.SDK
         {
             var qParams = QueueParameterHelper.ExtractQueueParams(queueitToken);
 
-            if (qParams != null && qParams.RedirectType != null && qParams.RedirectType.ToLower() == "debug")            
+            if (qParams != null && qParams.RedirectType != null && qParams.RedirectType.ToLower() == "debug")
                 return HashHelper.GenerateSHA256Hash(secretKey, qParams.QueueITTokenWithoutHash) == qParams.HashCode;
-            
+
             return false;
+        }
+
+        private static void LogExtraRequestDetails(Dictionary<string, string> debugEntries)
+        {
+            debugEntries["ServerUtcTime"] = DateTime.UtcNow.ToString("o");
+            debugEntries["RequestIP"] = GetHttpContextBase().Request.UserHostAddress;
+            debugEntries["RequestHttpHeader_Via"] = GetHttpContextBase().Request.Headers["Via"];
+            debugEntries["RequestHttpHeader_Forwarded"] = GetHttpContextBase().Request.Headers["Forwarded"];
+            debugEntries["RequestHttpHeader_XForwardedFor"] = GetHttpContextBase().Request.Headers["X-Forwarded-For"];
+            debugEntries["RequestHttpHeader_XForwardedHost"] = GetHttpContextBase().Request.Headers["X-Forwarded-Host"];
+            debugEntries["RequestHttpHeader_XForwardedProto"] = GetHttpContextBase().Request.Headers["X-Forwarded-Proto"];
         }
     }
 }

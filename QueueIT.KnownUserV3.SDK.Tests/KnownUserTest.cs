@@ -14,23 +14,25 @@ namespace QueueIT.KnownUserV3.SDK.Tests
         {
             public MockHttpRequest()
             {
-                this.QueryStringValue = new NameValueCollection();
+                QueryStringValue = new NameValueCollection();
+                HeadersValue = new NameValueCollection();
             }
+
             public HttpCookieCollection CookiesValue { get; set; }
             public string UserAgentValue { get; set; }
             public NameValueCollection QueryStringValue { get; set; }
             public Uri UrlValue { get; set; }
-            public override string UserAgent
-            {
-                get
-                {
-                    return UserAgentValue;
-                }
-            }
+            public string UserHostAddressValue { get; set; }
+            public NameValueCollection HeadersValue { get; set; }
+
+            public override string UserAgent => UserAgentValue;
             public override HttpCookieCollection Cookies => this.CookiesValue;
             public override NameValueCollection QueryString => QueryStringValue;
             public override Uri Url => UrlValue;
+            public override string UserHostAddress => UserHostAddressValue;
+            public override NameValueCollection Headers => HeadersValue;
         }
+
         class MockHttpResponse : HttpResponseBase
         {
             public HttpCookieCollection CookiesValue { get; set; }
@@ -62,7 +64,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             public List<List<string>> validateQueueRequestCalls = new List<List<string>>();
             public List<List<string>> extendQueueCookieCalls = new List<List<string>>();
             public List<List<string>> cancelRequestCalls = new List<List<string>>();
-            
+
             public RequestValidationResult ValidateQueueRequest(string targetUrl, string queueitToken, QueueEventConfig config, string customerId, string secretKey)
             {
                 List<string> args = new List<string>();
@@ -108,15 +110,37 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             }
         }
 
+        private void AssertRequestCookieContent(string[] cookieValues, params string[] expectedValues)
+        {
+            Assert.True(cookieValues.Count(v => v.StartsWith("ServerUtcTime=")) == 1);
+            Assert.True(cookieValues.Count(v => v.StartsWith("RequestIP=")) == 1);
+            Assert.True(cookieValues.Count(v => v.StartsWith("RequestHttpHeader_Via=")) == 1);
+            Assert.True(cookieValues.Count(v => v.StartsWith("RequestHttpHeader_Forwarded=")) == 1);
+            Assert.True(cookieValues.Count(v => v.StartsWith("RequestHttpHeader_XForwardedFor=")) == 1);
+            Assert.True(cookieValues.Count(v => v.StartsWith("RequestHttpHeader_XForwardedHost=")) == 1);
+            Assert.True(cookieValues.Count(v => v.StartsWith("RequestHttpHeader_XForwardedProto=")) == 1);
+
+            var utcTimeInCookie = cookieValues.FirstOrDefault(v => v.StartsWith("ServerUtcTime")).Split('=')[1];
+            Assert.True(string.Compare(expectedValues[0], utcTimeInCookie) <= 0);
+            Assert.True(string.Compare(DateTime.UtcNow.ToString("o"), utcTimeInCookie) >= 0);
+
+            Assert.True(cookieValues.Any(v => v == $"RequestIP={expectedValues[1]}"));
+            Assert.True(cookieValues.Any(v => v == $"RequestHttpHeader_Via={expectedValues[2]}"));
+            Assert.True(cookieValues.Any(v => v == $"RequestHttpHeader_Forwarded={expectedValues[3]}"));
+            Assert.True(cookieValues.Any(v => v == $"RequestHttpHeader_XForwardedFor={expectedValues[4]}"));
+            Assert.True(cookieValues.Any(v => v == $"RequestHttpHeader_XForwardedHost={expectedValues[5]}"));
+            Assert.True(cookieValues.Any(v => v == $"RequestHttpHeader_XForwardedProto={expectedValues[6]}"));
+        }
+
         [Fact]
         public void CancelRequestByLocalConfig_Test()
         {
             // Arrange
             UserInQueueServiceMock mock = new UserInQueueServiceMock();
             KnownUser._UserInQueueService = (mock);
-            var cancelEventConfig = new CancelEventConfig() {  CookieDomain="cookiedomain", EventId="eventid", QueueDomain="queuedomain", Version=1};
+            var cancelEventConfig = new CancelEventConfig() { CookieDomain = "cookiedomain", EventId = "eventid", QueueDomain = "queuedomain", Version = 1 };
             // Act
-            KnownUser.CancelRequestByLocalConfig("url", "queueitToken", cancelEventConfig,"customerid","secretekey");
+            KnownUser.CancelRequestByLocalConfig("url", "queueitToken", cancelEventConfig, "customerid", "secretekey");
 
             // Assert
             Assert.Equal("url", mock.cancelRequestCalls[0][0]);
@@ -187,7 +211,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             UserInQueueServiceMock mock = new UserInQueueServiceMock();
             KnownUser._UserInQueueService = (mock);
             bool exceptionWasThrown = false;
-            
+
             // Act
             try
             {
@@ -771,7 +795,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests
 
             UserInQueueServiceMock mock = new UserInQueueServiceMock();
             KnownUser._UserInQueueService = (mock);
-                      // Act
+            // Act
             KnownUser.ValidateRequestByIntegrationConfig("http://test.com?event1=true", "queueitToken", customerIntegration, "customerid", "secretkey");
 
             // Assert
@@ -785,25 +809,39 @@ namespace QueueIT.KnownUserV3.SDK.Tests
         public void ValidateRequestByIntegrationConfig_Debug()
         {
             // Arrange 
+            string requestIP = "80.35.35.34";
+            string viaHeader = "1.1 example.com";
+            string forwardedHeader = "for=192.0.2.60;proto=http;by=203.0.113.43";
+            string xForwardedForHeader = "129.78.138.66, 129.78.64.103";
+            string xForwardedHostHeader = "en.wikipedia.org:8080";
+            string xForwardedProtoHeader = "https";
+
             var httpContextMock = new HttpContextMock()
             {
                 MockRequest = new MockHttpRequest()
                 {
+                    HeadersValue = new NameValueCollection() {
+                        { "Via", viaHeader },
+                        { "Forwarded", forwardedHeader },
+                        { "X-Forwarded-For", xForwardedForHeader },
+                        { "X-Forwarded-Host", xForwardedHostHeader },
+                        { "X-Forwarded-Proto", xForwardedProtoHeader }
+                    },
+                    UserHostAddressValue = requestIP,
                     QueryStringValue = new NameValueCollection()
                     {
-                        { "queueittoken", "queueittoken_value"},
-                        { "queueitdebug", "queueitdebug_value"}
-
+                        { "queueittoken", "queueittoken_value" },
+                        { "queueitdebug", "queueitdebug_value" }
                     },
                     UrlValue = new Uri("http://test.com/?event1=true&queueittoken=queueittokenvalue"),
                     CookiesValue = new HttpCookieCollection()
-                }
-                ,
+                },
                 MockResponse = new MockHttpResponse()
                 {
                     CookiesValue = new HttpCookieCollection()
                 }
             };
+
             KnownUser._HttpContextBase = httpContextMock;
             UserInQueueServiceMock mock = new UserInQueueServiceMock();
             KnownUser._UserInQueueService = (mock);
@@ -815,8 +853,6 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             triggerPart1.ValidatorType = "UrlValidator";
             triggerPart1.IsNegative = false;
             triggerPart1.IsIgnoreCase = true;
-
-
 
             TriggerModel trigger = new TriggerModel();
             trigger.LogicalOperator = "And";
@@ -841,11 +877,11 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             customerIntegration.Version = 3;
             var queueitToken = QueueITTokenGenerator.GenerateToken(DateTime.UtcNow, "event1",
                 Guid.NewGuid().ToString(), true, null, "secretKey", out var hash, "debug");
-            
+
+            var utcTimeBeforeActionWasPerformed = DateTime.UtcNow.ToString("o");
+
             // Act
-            RequestValidationResult result = KnownUser
-                .ValidateRequestByIntegrationConfig($"http://test.com?event1=true",
-                queueitToken, customerIntegration, "customerId", "secretKey");
+            RequestValidationResult result = KnownUser.ValidateRequestByIntegrationConfig($"http://test.com?event1=true", queueitToken, customerIntegration, "customerId", "secretKey");
 
             // Assert
             var cookieValues = HttpUtility.UrlDecode(httpContextMock.MockResponse.Cookies["queueitdebug"].Value).Split('|');
@@ -855,17 +891,35 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             Assert.True(cookieValues.Any(v => v == $"QueueitToken={queueitToken}"));
             Assert.True(cookieValues.Any(v => v == $"OriginalUrl=http://test.com/?event1=true&queueittoken=queueittokenvalue"));
             Assert.True(cookieValues.Any(v => v == $"TargetUrl=http://test.com?event1=true"));
-            Assert.True(cookieValues.Any(v => v == $"QueueConfig=EventId:event1&Version:3&QueueDomain:knownusertest.queue-it.net&CookieDomain:.test.com&ExtendCookieValidity:True&CookieValidityMinute:20&LayoutName:Christmas Layout by Queue-it&Culture:da-DK"));            
-        }
+            Assert.True(cookieValues.Any(v => v == $"QueueConfig=EventId:event1&Version:3&QueueDomain:knownusertest.queue-it.net&CookieDomain:.test.com&ExtendCookieValidity:True&CookieValidityMinute:20&LayoutName:Christmas Layout by Queue-it&Culture:da-DK"));
 
+            AssertRequestCookieContent(cookieValues,
+                utcTimeBeforeActionWasPerformed, requestIP, viaHeader, forwardedHeader, xForwardedForHeader, xForwardedHostHeader, xForwardedProtoHeader);
+        }
+        
         [Fact]
         public void ValidateRequestByIntegrationConfig_Debug_WithoutMatch()
         {
             // Arrange 
+            string requestIP = "80.35.35.34";
+            string viaHeader = "1.1 example.com";
+            string forwardedHeader = "for=192.0.2.60;proto=http;by=203.0.113.43";
+            string xForwardedForHeader = "129.78.138.66, 129.78.64.103";
+            string xForwardedHostHeader = "en.wikipedia.org:8080";
+            string xForwardedProtoHeader = "https";
+
             var httpContextMock = new HttpContextMock()
             {
                 MockRequest = new MockHttpRequest()
                 {
+                    HeadersValue = new NameValueCollection() {
+                        { "Via", viaHeader },
+                        { "Forwarded", forwardedHeader },
+                        { "X-Forwarded-For", xForwardedForHeader },
+                        { "X-Forwarded-Host", xForwardedHostHeader },
+                        { "X-Forwarded-Proto", xForwardedProtoHeader }
+                    },
+                    UserHostAddressValue = requestIP,
                     QueryStringValue = new NameValueCollection()
                     {
                         { "queueittoken", "queueittoken_value"},
@@ -891,6 +945,9 @@ namespace QueueIT.KnownUserV3.SDK.Tests
 
             var queueitToken = QueueITTokenGenerator.GenerateToken(DateTime.UtcNow, "event1",
                         Guid.NewGuid().ToString(), true, null, "secretKey", out var hash, "debug");
+
+            var utcTimeBeforeActionWasPerformed = DateTime.UtcNow.ToString("o");
+            
             // Act
             RequestValidationResult result = KnownUser
                 .ValidateRequestByIntegrationConfig("http://test.com?event1=true",
@@ -903,6 +960,9 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             Assert.True(cookieValues.Any(v => v == $"ConfigVersion=10"));
             Assert.True(cookieValues.Any(v => v == $"OriginalUrl=http://test.com/?event1=true&queueittoken=queueittokenvalue"));
             Assert.True(cookieValues.Any(v => v == $"MatchedConfig=NULL"));
+
+            AssertRequestCookieContent(cookieValues,
+                utcTimeBeforeActionWasPerformed, requestIP, viaHeader, forwardedHeader, xForwardedForHeader, xForwardedHostHeader, xForwardedProtoHeader);
         }
 
         [Fact]
@@ -942,18 +1002,34 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             // Act
             RequestValidationResult result = KnownUser
                 .ValidateRequestByIntegrationConfig("http://test.com?event1=true",
-                queueitToken+"test", customerIntegration, "customerId", "secretKey");
+                queueitToken + "test", customerIntegration, "customerId", "secretKey");
 
             Assert.True(httpContextMock.MockResponse.Cookies.AllKeys.Length == 0);
         }
+
         [Fact]
         public void ResolveQueueRequestByLocalConfig_Debug()
         {
             // Arrange 
+            string requestIP = "80.35.35.34";
+            string viaHeader = "1.1 example.com";
+            string forwardedHeader = "for=192.0.2.60;proto=http;by=203.0.113.43";
+            string xForwardedForHeader = "129.78.138.66, 129.78.64.103";
+            string xForwardedHostHeader = "en.wikipedia.org:8080";
+            string xForwardedProtoHeader = "https";
+
             var httpContextMock = new HttpContextMock()
             {
                 MockRequest = new MockHttpRequest()
                 {
+                    HeadersValue = new NameValueCollection() {
+                        { "Via", viaHeader },
+                        { "Forwarded", forwardedHeader },
+                        { "X-Forwarded-For", xForwardedForHeader },
+                        { "X-Forwarded-Host", xForwardedHostHeader },
+                        { "X-Forwarded-Proto", xForwardedProtoHeader }
+                    },
+                    UserHostAddressValue = requestIP,
                     QueryStringValue = new NameValueCollection()
                     {
                         { "queueittoken", "queueittoken_value"},
@@ -986,27 +1062,45 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             var queueitToken = QueueITTokenGenerator.GenerateToken(DateTime.UtcNow, "event1",
             Guid.NewGuid().ToString(), true, null, "secretKey", out var hash, "debug");
 
+            var utcTimeBeforeActionWasPerformed = DateTime.UtcNow.ToString("o");
+
             // Act
-            RequestValidationResult result = KnownUser
-                .ResolveQueueRequestByLocalConfig("http://test.com?event1=true",
-                queueitToken, eventConfig, "customerId", "secretKey");
+            RequestValidationResult result = KnownUser.ResolveQueueRequestByLocalConfig("http://test.com?event1=true", queueitToken, eventConfig, "customerId", "secretKey");
 
             // Assert
             var cookieValues = HttpUtility.UrlDecode(httpContextMock.MockResponse.Cookies["queueitdebug"].Value).Split('|');
             Assert.True(cookieValues.Any(v => v == $"QueueitToken={queueitToken}"));
             Assert.True(cookieValues.Any(v => v == $"OriginalUrl=http://test.com/?event1=true&queueittoken=queueittokenvalue"));
             Assert.True(cookieValues.Any(v => v == $"TargetUrl=http://test.com?event1=true"));
-            Assert.True(cookieValues.Any(v => v == $"QueueConfig=EventId:eventId&Version:12&QueueDomain:queueDomain&CookieDomain:cookieDomain&ExtendCookieValidity:True&CookieValidityMinute:10&LayoutName:layoutName&Culture:culture"));            
+            Assert.True(cookieValues.Any(v => v == $"QueueConfig=EventId:eventId&Version:12&QueueDomain:queueDomain&CookieDomain:cookieDomain&ExtendCookieValidity:True&CookieValidityMinute:10&LayoutName:layoutName&Culture:culture"));
+
+            AssertRequestCookieContent(cookieValues,
+                utcTimeBeforeActionWasPerformed, requestIP, viaHeader, forwardedHeader, xForwardedForHeader, xForwardedHostHeader, xForwardedProtoHeader);
         }
 
         [Fact]
         public void CancelRequestByLocalConfig_Debug()
         {
             // Arrange 
+            string requestIP = "80.35.35.34";
+            string viaHeader = "1.1 example.com";
+            string forwardedHeader = "for=192.0.2.60;proto=http;by=203.0.113.43";
+            string xForwardedForHeader = "129.78.138.66, 129.78.64.103";
+            string xForwardedHostHeader = "en.wikipedia.org:8080";
+            string xForwardedProtoHeader = "https";
+
             var httpContextMock = new HttpContextMock()
             {
                 MockRequest = new MockHttpRequest()
                 {
+                    HeadersValue = new NameValueCollection() {
+                        { "Via", viaHeader },
+                        { "Forwarded", forwardedHeader },
+                        { "X-Forwarded-For", xForwardedForHeader },
+                        { "X-Forwarded-Host", xForwardedHostHeader },
+                        { "X-Forwarded-Proto", xForwardedProtoHeader }
+                    },
+                    UserHostAddressValue = requestIP,
                     QueryStringValue = new NameValueCollection()
                     {
                         { "queueittoken", "queueittoken_value"},
@@ -1036,10 +1130,10 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             var queueitToken = QueueITTokenGenerator.GenerateToken(DateTime.UtcNow, "event1",
             Guid.NewGuid().ToString(), true, null, "secretKey", out var hash, "debug");
 
+            var utcTimeBeforeActionWasPerformed = DateTime.UtcNow.ToString("o");
+
             // Act
-            RequestValidationResult result = KnownUser
-                .CancelRequestByLocalConfig("http://test.com?event1=true",
-                queueitToken, eventConfig, "customerId", "secretKey");
+            RequestValidationResult result = KnownUser.CancelRequestByLocalConfig("http://test.com?event1=true", queueitToken, eventConfig, "customerId", "secretKey");
 
             // Assert
             var cookieValues = HttpUtility.UrlDecode(httpContextMock.MockResponse.Cookies["queueitdebug"].Value).Split('|');
@@ -1047,6 +1141,9 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             Assert.True(cookieValues.Any(v => v == $"OriginalUrl=http://test.com/?event1=true&queueittoken=queueittokenvalue"));
             Assert.True(cookieValues.Any(v => v == $"TargetUrl=http://test.com?event1=true"));
             Assert.True(cookieValues.Any(v => v == $"CancelConfig=EventId:eventId&Version:12&QueueDomain:queueDomain&CookieDomain:cookieDomain"));
+
+            AssertRequestCookieContent(cookieValues,
+                utcTimeBeforeActionWasPerformed, requestIP, viaHeader, forwardedHeader, xForwardedForHeader, xForwardedHostHeader, xForwardedProtoHeader);
         }
     }
 }
