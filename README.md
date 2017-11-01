@@ -55,12 +55,7 @@ The following method is all that is needed to validate that a user has been thro
 ```
 private void DoValidation()
 {
-        //Adding no cache headers to prevent browsers to cache requests
-        Response.Cache.SetCacheability(HttpCacheability.NoCache);
-        Response.Cache.SetExpires(DateTime.UtcNow.AddHours(-1));
-        Response.Cache.SetNoStore();
-        Response.Cache.SetMaxAge(new TimeSpan(0, 0, 30));
-       //end
+
     try
     {
         var customerId = "Your Queue-it customer ID";
@@ -78,6 +73,12 @@ private void DoValidation()
 
         if (validationResult.DoRedirect)
         {
+            //Adding no cache headers to prevent browsers to cache requests
+            Response.Cache.SetCacheability(HttpCacheability.NoCache);
+            Response.Cache.SetExpires(DateTime.UtcNow.AddHours(-1));
+            Response.Cache.SetNoStore();
+            Response.Cache.SetMaxAge(new TimeSpan(0, 0, 30));
+           //end
             //Send the user to the queue - either becuase hash was missing or becuase is was invalid
             Response.Redirect(validationResult.RedirectUrl);
         }
@@ -117,12 +118,7 @@ The following is an example of how to specify the configuration in code:
 ```
 private void DoValidationByLocalEventConfig()
 {
-        //Adding no cache headers to prevent browsers to cache requests
-        Response.Cache.SetCacheability(HttpCacheability.NoCache);
-        Response.Cache.SetExpires(DateTime.UtcNow.AddHours(-1));
-        Response.Cache.SetNoStore();
-        Response.Cache.SetMaxAge(new TimeSpan(0, 0, 30));
-       //end
+
 
     try
     {
@@ -147,6 +143,12 @@ private void DoValidationByLocalEventConfig()
 
         if (validationResult.DoRedirect)
         {
+            //Adding no cache headers to prevent browsers to cache requests
+            Response.Cache.SetCacheability(HttpCacheability.NoCache);
+            Response.Cache.SetExpires(DateTime.UtcNow.AddHours(-1));
+            Response.Cache.SetNoStore();
+            Response.Cache.SetMaxAge(new TimeSpan(0, 0, 30));
+           //end
             //Send the user to the queue - either becuase hash was missing or becuase is was invalid
             Response.Redirect(validationResult.RedirectUrl);
         }
