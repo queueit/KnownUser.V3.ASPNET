@@ -10,7 +10,7 @@ The [IntegrationConfigProvider.cs](https://github.com/queueit/KnownUser.V3.ASPNE
 the download and caching of the configuration can be done. 
 *This is just an example*, but if you make your own downloader, please cache the result for 5 minutes to limit number of download requests.
 
-![Configuration Provider flow](https://github.com/queueit/KnownUser.V3.ASPNET/blob/master/Documentation/ConfigurationProviderExample.PNG)
+![Configuration Provider flow](https://github.com/queueit/KnownUser.V3.ASPNET/blob/master/Documentation/ConfigProviderExample.png)
 
 
 ## Helper functions
