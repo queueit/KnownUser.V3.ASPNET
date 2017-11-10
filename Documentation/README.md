@@ -33,8 +33,9 @@ Example C# below
 
 // an HTTP PUT endpoint accepting a JSON request 
 // containing integrationInfo as string in hex format and its hash  
-public bool UpdateIntegrationConfig(string integrationInfo, string hash, string secretKey)
+public bool UpdateIntegrationConfig(string integrationInfo, string hash)
 {
+    string secretKey="copy your seceret from Go Queue-it platform"
     // validating request
     if(GenerateSHA256Hash(integrationInfo, secretKey) == hash)
     {
