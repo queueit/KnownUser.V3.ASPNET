@@ -799,6 +799,8 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             customerIntegration.Integrations = new IntegrationConfigModel[] { config };
             customerIntegration.Version = 3;
 
+            var httpContextMock = new HttpContextMock() { MockRequest = new MockHttpRequest() { } };
+            KnownUser._HttpContextBase = httpContextMock;
             UserInQueueServiceMock mock = new UserInQueueServiceMock();
             KnownUser._UserInQueueService = (mock);
             
@@ -838,6 +840,8 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             customerIntegration.Integrations = new IntegrationConfigModel[] { config };
             customerIntegration.Version = 3;
 
+            var httpContextMock = new HttpContextMock() { MockRequest = new MockHttpRequest() { } };
+            KnownUser._HttpContextBase = httpContextMock;
             UserInQueueServiceMock mock = new UserInQueueServiceMock();
             KnownUser._UserInQueueService = (mock);
             // Act
