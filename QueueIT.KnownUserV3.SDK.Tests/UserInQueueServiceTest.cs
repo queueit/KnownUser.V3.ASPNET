@@ -484,6 +484,18 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             Assert.True(result.RedirectUrl.ToLower() == expectedUrl.ToLower());
             Assert.True(config.EventId == result.EventId);
         }
+
+        [Fact]
+        public void GetIgnoreRequest()
+        {
+            UserInQueueService testObject = new UserInQueueService(null);
+            var result = testObject.GetIgnoreResult();
+            Assert.True(result.ActionType == ActionType.IgnoreAction);
+            Assert.False(result.DoRedirect);
+            Assert.Null(result.EventId);
+            Assert.Null(result.QueueId);
+            Assert.Null(result.RedirectUrl);
+        }
     }
 
     public class QueueITTokenGenerator

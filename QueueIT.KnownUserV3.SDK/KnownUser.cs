@@ -48,48 +48,22 @@ namespace QueueIT.KnownUserV3.SDK
                 if (matchedConfig == null)
                     return new RequestValidationResult(null);
 
-                if (string.IsNullOrEmpty(matchedConfig.ActionType) || matchedConfig.ActionType == ActionType.QueueAction)
+                switch (matchedConfig.ActionType ?? string.Empty)
                 {
-                    var targetUrl = "";
-                    switch (matchedConfig.RedirectLogic)
-                    {
-                        case "ForcedTargetUrl":
-                        case "ForecedTargetUrl":
-                            targetUrl = matchedConfig.ForcedTargetUrl;
-                            break;
-                        case "EventTargetUrl":
-                            targetUrl = "";
-                            break;
-                        default:
-                            targetUrl = currentUrlWithoutQueueITToken;
-                            break;
-                    }
+                    case ""://baackward compatibility
+                    case ActionType.QueueAction:
+                        {
+                            return HandleQueueAction(currentUrlWithoutQueueITToken, queueitToken, customerIntegrationInfo, customerId, secretKey, debugEntries, matchedConfig);
+                        }
+                    case ActionType.CancelAction:
+                        {
+                            return HandleCancelAction(currentUrlWithoutQueueITToken, queueitToken, customerIntegrationInfo, customerId, secretKey, debugEntries, matchedConfig);
+                        }
+                    default://default IgnoreAction
+                        {
+                            return HandleIgnoreAction();
+                        }
 
-                    var queueEventConfig = new QueueEventConfig()
-                    {
-                        QueueDomain = matchedConfig.QueueDomain,
-                        Culture = matchedConfig.Culture,
-                        EventId = matchedConfig.EventId,
-                        ExtendCookieValidity = matchedConfig.ExtendCookieValidity.Value,
-                        LayoutName = matchedConfig.LayoutName,
-                        CookieValidityMinute = matchedConfig.CookieValidityMinute.Value,
-                        CookieDomain = matchedConfig.CookieDomain,
-                        Version = customerIntegrationInfo.Version
-                    };
-
-                    return ResolveQueueRequestByLocalConfig(targetUrl, queueitToken, queueEventConfig, customerId, secretKey, debugEntries);
-                }
-                else // CancelQueueAction
-                {
-                    var cancelEventConfig = new CancelEventConfig()
-                    {
-                        QueueDomain = matchedConfig.QueueDomain,
-                        EventId = matchedConfig.EventId,
-                        Version = customerIntegrationInfo.Version,
-                        CookieDomain = matchedConfig.CookieDomain
-                    };
-
-                    return CancelRequestByLocalConfig(currentUrlWithoutQueueITToken, queueitToken, cancelEventConfig, customerId, secretKey, debugEntries);
                 }
             }
             finally
@@ -261,6 +235,65 @@ namespace QueueIT.KnownUserV3.SDK
             debugEntries["RequestHttpHeader_XForwardedFor"] = GetHttpContextBase().Request.Headers["X-Forwarded-For"];
             debugEntries["RequestHttpHeader_XForwardedHost"] = GetHttpContextBase().Request.Headers["X-Forwarded-Host"];
             debugEntries["RequestHttpHeader_XForwardedProto"] = GetHttpContextBase().Request.Headers["X-Forwarded-Proto"];
+        }
+
+        private static RequestValidationResult HandleQueueAction(
+            string currentUrlWithoutQueueITToken, string queueitToken,
+            CustomerIntegration customerIntegrationInfo, string customerId,
+            string secretKey, Dictionary<string, string> debugEntries,
+            IntegrationConfigModel matchedConfig)
+        {
+            var targetUrl = "";
+            switch (matchedConfig.RedirectLogic)
+            {
+                case "ForcedTargetUrl":
+                case "ForecedTargetUrl":
+                    targetUrl = matchedConfig.ForcedTargetUrl;
+                    break;
+                case "EventTargetUrl":
+                    targetUrl = "";
+                    break;
+                default:
+                    targetUrl = currentUrlWithoutQueueITToken;
+                    break;
+            }
+
+            var queueEventConfig = new QueueEventConfig()
+            {
+                QueueDomain = matchedConfig.QueueDomain,
+                Culture = matchedConfig.Culture,
+                EventId = matchedConfig.EventId,
+                ExtendCookieValidity = matchedConfig.ExtendCookieValidity.Value,
+                LayoutName = matchedConfig.LayoutName,
+                CookieValidityMinute = matchedConfig.CookieValidityMinute.Value,
+                CookieDomain = matchedConfig.CookieDomain,
+                Version = customerIntegrationInfo.Version
+            };
+
+            return ResolveQueueRequestByLocalConfig(targetUrl, queueitToken, queueEventConfig, customerId, secretKey, debugEntries);
+        }
+
+        private static RequestValidationResult HandleCancelAction(
+            string currentUrlWithoutQueueITToken, string queueitToken,
+            CustomerIntegration customerIntegrationInfo, string customerId,
+            string secretKey, Dictionary<string, string> debugEntries,
+            IntegrationConfigModel matchedConfig)
+        {
+            var cancelEventConfig = new CancelEventConfig()
+            {
+                QueueDomain = matchedConfig.QueueDomain,
+                EventId = matchedConfig.EventId,
+                Version = customerIntegrationInfo.Version,
+                CookieDomain = matchedConfig.CookieDomain
+            };
+
+            return CancelRequestByLocalConfig(currentUrlWithoutQueueITToken, queueitToken, cancelEventConfig, customerId, secretKey, debugEntries);
+        }
+
+        private static RequestValidationResult HandleIgnoreAction()
+        {
+            var userInQueueService = GetUserInQueueService();
+            return userInQueueService.GetIgnoreResult();
         }
     }
 }

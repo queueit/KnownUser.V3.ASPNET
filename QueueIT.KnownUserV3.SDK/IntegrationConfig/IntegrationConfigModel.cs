@@ -35,6 +35,7 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfig
         public string ValidatorType { get; set; }
         public string Operator { get; set; }
         public string ValueToCompare { get; set; }
+        public string[] ValuesToCompare { get; set; }
         public bool IsNegative { get; set; }
         public bool IsIgnoreCase { get; set; }
         //UrlValidator
@@ -74,6 +75,8 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfig
     {
         public const string EqualS = "Equals";
         public const string Contains = "Contains";
+        public const string EqualsAny = "EqualsAny";
+        public const string ContainsAny = "ContainsAny";
         public const string StartsWith = "StartsWith";
         public const string EndsWith = "EndsWith";
         public const string MatchesWith = "MatchesWith";
@@ -87,6 +90,7 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfig
 
     internal static class ActionType
     {
+        public const string IgnoreAction = "Ignore";
         public const string CancelAction = "Cancel";
         public const string QueueAction = "Queue";
     }

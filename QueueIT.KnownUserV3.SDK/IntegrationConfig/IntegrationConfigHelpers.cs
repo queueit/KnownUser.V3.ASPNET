@@ -80,7 +80,8 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfig
                 triggerPart.IsNegative,
                 triggerPart.IsIgnoreCase,
                 GetUrlPart(triggerPart, url),
-                triggerPart.ValueToCompare);
+                triggerPart.ValueToCompare,
+                triggerPart.ValuesToCompare);
         }
 
         private static string GetUrlPart(TriggerPart triggerPart, string url)
@@ -139,7 +140,8 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfig
                 triggerPart.IsNegative,
                 triggerPart.IsIgnoreCase,
                 GetCookie(triggerPart.CookieName, cookieCollection),
-                triggerPart.ValueToCompare);
+                triggerPart.ValueToCompare,
+                triggerPart.ValuesToCompare);
         }
 
         private static string GetCookie(string cookieName, HttpCookieCollection cookieCollection)
@@ -161,7 +163,8 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfig
                 triggerPart.IsNegative,
                 triggerPart.IsIgnoreCase,
                 userAgent ?? string.Empty,
-                triggerPart.ValueToCompare);
+                triggerPart.ValueToCompare,
+                triggerPart.ValuesToCompare);
         }
     }
 
@@ -173,45 +176,51 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfig
                 triggerPart.IsNegative,
                 triggerPart.IsIgnoreCase,
                 httpHeaders?.Get(triggerPart.HttpHeaderName) ?? string.Empty,
-                triggerPart.ValueToCompare);
+                triggerPart.ValueToCompare,
+                triggerPart.ValuesToCompare);
         }
     }
 
     internal static class ComparisonOperatorHelper
     {
-        public static bool Evaluate(string opt, bool isNegative, bool isIgnoreCase, string left, string right)
+        public static bool Evaluate(string opt, bool isNegative, bool isIgnoreCase, string value, string valueToCompare, string[] valuesToCompare)
         {
-            left = left ?? string.Empty;
-            right = right ?? string.Empty;
+            value = value ?? string.Empty;
+            valueToCompare = valueToCompare ?? string.Empty;
+            valuesToCompare = valuesToCompare ?? new string[0];
 
             switch (opt)
             {
                 case ComparisonOperatorType.EqualS:
-                    return EqualS(left, right, isNegative, isIgnoreCase);
+                    return EqualS(value, valueToCompare, isNegative, isIgnoreCase);
                 case ComparisonOperatorType.Contains:
-                    return Contains(left, right, isNegative, isIgnoreCase);
+                    return Contains(value, valueToCompare, isNegative, isIgnoreCase);
                 case ComparisonOperatorType.StartsWith:
-                    return StartsWith(left, right, isNegative, isIgnoreCase);
+                    return StartsWith(value, valueToCompare, isNegative, isIgnoreCase);
                 case ComparisonOperatorType.EndsWith:
-                    return EndsWith(left, right, isNegative, isIgnoreCase);
+                    return EndsWith(value, valueToCompare, isNegative, isIgnoreCase);
                 case ComparisonOperatorType.MatchesWith:
-                    return MatchesWith(left, right, isNegative, isIgnoreCase);
+                    return MatchesWith(value, valueToCompare, isNegative, isIgnoreCase);
+                case ComparisonOperatorType.EqualsAny:
+                    return EqualsAny(value, valuesToCompare, isNegative, isIgnoreCase);
+                case ComparisonOperatorType.ContainsAny:
+                    return ContainsAny(value, valuesToCompare, isNegative, isIgnoreCase);
                 default:
                     return false;
             }
         }
 
-        private static bool Contains(string left, string right, bool isNegative, bool ignoreCase)
+        private static bool Contains(string value, string valueToCompare, bool isNegative, bool ignoreCase)
         {
-            if (right == "*")
+            if (valueToCompare == "*")
                 return true;
 
             var evaluation = false;
 
             if (ignoreCase)
-                evaluation = left.ToUpper().Contains(right.ToUpper());
+                evaluation = value.ToUpper().Contains(valueToCompare.ToUpper());
             else
-                evaluation = left.Contains(right);
+                evaluation = value.Contains(valueToCompare);
 
             if (isNegative)
                 return !evaluation;
@@ -219,14 +228,14 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfig
                 return evaluation;
         }
 
-        private static bool EqualS(string left, string right, bool isNegative, bool ignoreCase)
+        private static bool EqualS(string value, string valueToCompare, bool isNegative, bool ignoreCase)
         {
             var evaluation = false;
 
             if (ignoreCase)
-                evaluation = left.ToUpper() == right.ToUpper();
+                evaluation = value.ToUpper() == valueToCompare.ToUpper();
             else
-                evaluation = left == right;
+                evaluation = value == valueToCompare;
 
             if (isNegative)
                 return !evaluation;
@@ -234,14 +243,14 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfig
                 return evaluation;
         }
 
-        private static bool EndsWith(string left, string right, bool isNegative, bool ignoreCase)
+        private static bool EndsWith(string value, string valueToCompare, bool isNegative, bool ignoreCase)
         {
             var evaluation = false;
 
             if (ignoreCase)
-                evaluation = left.ToUpper().EndsWith(right.ToUpper());
+                evaluation = value.ToUpper().EndsWith(valueToCompare.ToUpper());
             else
-                evaluation = left.EndsWith(right);
+                evaluation = value.EndsWith(valueToCompare);
 
             if (isNegative)
                 return !evaluation;
@@ -249,14 +258,14 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfig
                 return evaluation;
         }
 
-        private static bool StartsWith(string left, string right, bool isNegative, bool ignoreCase)
+        private static bool StartsWith(string value, string valueToCompare, bool isNegative, bool ignoreCase)
         {
             var evaluation = false;
 
             if (ignoreCase)
-                evaluation = left.ToUpper().StartsWith(right.ToUpper());
+                evaluation = value.ToUpper().StartsWith(valueToCompare.ToUpper());
             else
-                evaluation = left.StartsWith(right);
+                evaluation = value.StartsWith(valueToCompare);
 
             if (isNegative)
                 return !evaluation;
@@ -264,21 +273,43 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfig
                 return evaluation;
         }
 
-        private static bool MatchesWith(string left, string right, bool isNegative, bool isIgnoreCase)
+        private static bool MatchesWith(string value, string valueToCompare, bool isNegative, bool isIgnoreCase)
         {
             Regex rg = null;
 
             if (isIgnoreCase)
-                rg = new Regex(right, RegexOptions.IgnoreCase);
+                rg = new Regex(valueToCompare, RegexOptions.IgnoreCase);
             else
-                rg = new Regex(right);
+                rg = new Regex(valueToCompare);
 
-            var evaluation = rg.IsMatch(left);
+            var evaluation = rg.IsMatch(value);
 
             if (isNegative)
                 return !evaluation;
             else
                 return evaluation;
+        }
+
+        private static bool EqualsAny(string value, string[] valuesToCompare, bool isNegative, bool isIgnoreCase)
+        {
+            foreach (var valueToCompare in valuesToCompare)
+            {
+                if (EqualS(value, valueToCompare, false, isIgnoreCase))
+                    return !isNegative;
+            }
+            
+            return isNegative;
+        }
+
+        private static bool ContainsAny(string value, string[] valuesToCompare, bool isNegative, bool isIgnoreCase)
+        {
+            foreach (var valueToCompare in valuesToCompare)
+            {
+                if (Contains(value, valueToCompare, false, isIgnoreCase))
+                    return !isNegative;
+            }
+            
+            return isNegative;
         }
     }
 }

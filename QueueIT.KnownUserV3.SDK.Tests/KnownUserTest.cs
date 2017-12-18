@@ -64,6 +64,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             public List<List<string>> validateQueueRequestCalls = new List<List<string>>();
             public List<List<string>> extendQueueCookieCalls = new List<List<string>>();
             public List<List<string>> cancelRequestCalls = new List<List<string>>();
+            public List<List<string>> ignoreRequestCalls = new List<List<string>>();
 
             public RequestValidationResult ValidateQueueRequest(string targetUrl, string queueitToken, QueueEventConfig config, string customerId, string secretKey)
             {
@@ -106,6 +107,12 @@ namespace QueueIT.KnownUserV3.SDK.Tests
                 args.Add(secretKey);
                 cancelRequestCalls.Add(args);
 
+                return null;
+            }
+
+            public RequestValidationResult GetIgnoreResult()
+            {
+                ignoreRequestCalls.Add(new List<string>());
                 return null;
             }
         }
@@ -765,6 +772,44 @@ namespace QueueIT.KnownUserV3.SDK.Tests
         }
 
         [Fact]
+        public void ValidateRequestByIntegrationConfig_IgnoreAction()
+        {
+            // Arrange
+            TriggerPart triggerPart = new TriggerPart();
+            triggerPart.Operator = "Contains";
+            triggerPart.ValueToCompare = "event1";
+            triggerPart.UrlPart = "PageUrl";
+            triggerPart.ValidatorType = "UrlValidator";
+            triggerPart.IsNegative = false;
+            triggerPart.IsIgnoreCase = true;
+
+            TriggerModel trigger = new TriggerModel();
+            trigger.LogicalOperator = "And";
+            trigger.TriggerParts = new TriggerPart[] { triggerPart };
+
+            IntegrationConfigModel config = new IntegrationConfigModel();
+            config.Name = "event1action";
+            config.EventId = "eventid";
+            config.CookieDomain = "cookiedomain";
+            config.Triggers = new TriggerModel[] { trigger };
+            config.QueueDomain = "queuedomain";
+            config.ActionType = ActionType.IgnoreAction;
+
+            CustomerIntegration customerIntegration = new CustomerIntegration();
+            customerIntegration.Integrations = new IntegrationConfigModel[] { config };
+            customerIntegration.Version = 3;
+
+            UserInQueueServiceMock mock = new UserInQueueServiceMock();
+            KnownUser._UserInQueueService = (mock);
+            
+            // Act
+            KnownUser.ValidateRequestByIntegrationConfig("http://test.com?event1=true", "queueitToken", customerIntegration, "customerid", "secretkey");
+
+            // Assert
+            Assert.True(mock.ignoreRequestCalls.Count() == 1);
+        }
+
+        [Fact]
         public void ValidateRequestByIntegrationConfig_CancelAction()
         {
             // Arrange
@@ -871,6 +916,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             config.QueueDomain = "knownusertest.queue-it.net";
             config.RedirectLogic = "AllowTParameter";
             config.ForcedTargetUrl = "";
+          
 
             CustomerIntegration customerIntegration = new CustomerIntegration();
             customerIntegration.Integrations = new IntegrationConfigModel[] { config };

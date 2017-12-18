@@ -20,6 +20,8 @@ namespace QueueIT.KnownUserV3.SDK
             string customerId,
             string secretKey);
 
+        RequestValidationResult GetIgnoreResult();
+
         void ExtendQueueCookie(
             string eventId,
             int cookieValidityMinute,
@@ -28,7 +30,7 @@ namespace QueueIT.KnownUserV3.SDK
 
     internal class UserInQueueService : IUserInQueueService
     {
-        internal const string SDK_VERSION = "3.3.2";
+        internal const string SDK_VERSION = "3.4.0";
         private readonly IUserInQueueStateRepository _userInQueueStateRepository;
 
         public UserInQueueService(IUserInQueueStateRepository queueStateRepository)
@@ -170,7 +172,11 @@ namespace QueueIT.KnownUserV3.SDK
             this._userInQueueStateRepository.ExtendQueueCookie(eventId, cookieValidityMinute, secretKey);
         }
 
-        public RequestValidationResult ValidateCancelRequest(string targetUrl, CancelEventConfig config, string customerId, string secretKey)
+        public RequestValidationResult ValidateCancelRequest(
+            string targetUrl,
+            CancelEventConfig config,
+            string customerId,
+            string secretKey)
         {
             var state = _userInQueueStateRepository.GetState(config.EventId, secretKey);
 
@@ -203,6 +209,11 @@ namespace QueueIT.KnownUserV3.SDK
                     QueueId = null
                 };
             }
+        }
+
+        public RequestValidationResult GetIgnoreResult()
+        {
+            return new RequestValidationResult(ActionType.IgnoreAction);
         }
     }
 }

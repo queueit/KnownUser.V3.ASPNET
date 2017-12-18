@@ -13,51 +13,74 @@ namespace QueueIT.KnownUserV3.SDK.Tests.IntegrationConfig
         [Fact]
         public void Evaluate_Equals()
         {
-            Assert.True(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.EqualS, false, false, "test1", "test1"));
-            Assert.False(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.EqualS, false, false, "test1", "Test1"));
-            Assert.True(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.EqualS, false, true, "test1", "Test1"));
-            Assert.True(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.EqualS, true, false, "test1", "Test1"));
-            Assert.False(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.EqualS, true, false, "test1", "test1"));
-            Assert.False(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.EqualS, true, true, "test1", "Test1"));
+            Assert.True(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.EqualS, false, false, "test1", "test1", null));
+            Assert.False(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.EqualS, false, false, "test1", "Test1", null));
+            Assert.True(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.EqualS, false, true, "test1", "Test1", null));
+            Assert.True(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.EqualS, true, false, "test1", "Test1", null));
+            Assert.False(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.EqualS, true, false, "test1", "test1", null));
+            Assert.False(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.EqualS, true, true, "test1", "Test1", null));
         }
 
         [Fact]
         public void Evaluate_Contains()
         {
-            Assert.True(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.Contains, false, false, "test_test1_test", "test1"));
-            Assert.False(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.Contains, false, false, "test_test1_test", "Test1"));
-            Assert.True(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.Contains, false, true, "test_test1_test", "Test1"));
-            Assert.True(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.Contains, true, false, "test_test1_test", "Test1"));
-            Assert.False(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.Contains, true, true, "test_test1", "Test1"));
-            Assert.False(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.Contains, true, false, "test_test1", "test1"));
-            Assert.True(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.Contains, false, false, "test_dsdsdsdtest1", "*"));
+            Assert.True(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.Contains, false, false, "test_test1_test", "test1", null));
+            Assert.False(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.Contains, false, false, "test_test1_test", "Test1", null));
+            Assert.True(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.Contains, false, true, "test_test1_test", "Test1", null));
+            Assert.True(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.Contains, true, false, "test_test1_test", "Test1", null));
+            Assert.False(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.Contains, true, true, "test_test1", "Test1", null));
+            Assert.False(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.Contains, true, false, "test_test1", "test1", null));
+            Assert.True(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.Contains, false, false, "test_dsdsdsdtest1", "*", null));
         }
 
         [Fact]
         public void Evaluate_StartsWith()
         {
-            Assert.True(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.StartsWith, false, false, "test1_test1_test", "test1"));
-            Assert.False(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.StartsWith, false, false, "test1_test1_test", "Test1"));
-            Assert.True(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.StartsWith, false, true, "test1_test1_test", "Test1"));
-            Assert.False(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.StartsWith, true, true, "test1_test1_test", "Test1"));
+            Assert.True(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.StartsWith, false, false, "test1_test1_test", "test1", null));
+            Assert.False(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.StartsWith, false, false, "test1_test1_test", "Test1", null));
+            Assert.True(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.StartsWith, false, true, "test1_test1_test", "Test1", null));
+            Assert.False(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.StartsWith, true, true, "test1_test1_test", "Test1", null));
         }
 
         [Fact]
         public void Evaluate_EndsWith()
         {
-            Assert.True(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.EndsWith, false, false, "test1_test1_testshop", "shop"));
-            Assert.False(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.EndsWith, false, false, "test1_test1_testshop2", "shop"));
-            Assert.True(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.EndsWith, false, true, "test1_test1_testshop", "Shop"));
-            Assert.False(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.EndsWith, true, true, "test1_test1_testshop", "Shop"));
+            Assert.True(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.EndsWith, false, false, "test1_test1_testshop", "shop", null));
+            Assert.False(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.EndsWith, false, false, "test1_test1_testshop2", "shop", null));
+            Assert.True(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.EndsWith, false, true, "test1_test1_testshop", "Shop", null));
+            Assert.False(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.EndsWith, true, true, "test1_test1_testshop", "Shop", null));
         }
 
         [Fact]
         public void Evaluate_MatchesWith()
         {
-            Assert.True(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.MatchesWith, false, false, "test1_test1_testshop", ".*shop.*"));
-            Assert.False(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.MatchesWith, false, false, "test1_test1_testshop2", ".*Shop.*"));
-            Assert.True(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.MatchesWith, false, true, "test1_test1_testshop", ".*Shop.*"));
-            Assert.False(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.MatchesWith, true, true, "test1_test1_testshop", ".*Shop.*"));
+            Assert.True(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.MatchesWith, false, false, "test1_test1_testshop", ".*shop.*", null));
+            Assert.False(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.MatchesWith, false, false, "test1_test1_testshop2", ".*Shop.*", null));
+            Assert.True(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.MatchesWith, false, true, "test1_test1_testshop", ".*Shop.*", null));
+            Assert.False(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.MatchesWith, true, true, "test1_test1_testshop", ".*Shop.*", null));
+        }
+
+        [Fact]
+        public void Evaluate_EqualsAny()
+        {
+            Assert.True(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.EqualsAny, false, false, "test1", null, new string[] { "test1" }));
+            Assert.False(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.EqualsAny, false, false, "test1", null, new string[] { "Test1" }));
+            Assert.True(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.EqualsAny, false, true, "test1", null, new string[] { "Test1" }));
+            Assert.True(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.EqualsAny, true, false, "test1", null, new string[] { "Test1" }));
+            Assert.False(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.EqualsAny, true, false, "test1", null, new string[] { "test1" }));
+            Assert.False(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.EqualsAny, true, true, "test1", null, new string[] { "Test1" }));
+        }
+
+        [Fact]
+        public void Evaluate_ContainsAny()
+        {
+            Assert.True(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.ContainsAny, false, false, "test_test1_test", null, new string[] { "test1" }));
+            Assert.False(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.ContainsAny, false, false, "test_test1_test", null, new string[] { "Test1" }));
+            Assert.True(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.ContainsAny, false, true, "test_test1_test", null, new string[] { "Test1" }));
+            Assert.True(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.ContainsAny, true, false, "test_test1_test", null, new string[] { "Test1" }));
+            Assert.False(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.ContainsAny, true, true, "test_test1", null, new string[] { "Test1" }));
+            Assert.False(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.ContainsAny, true, false, "test_test1", null, new string[] { "test1" }));
+            Assert.True(ComparisonOperatorHelper.Evaluate(ComparisonOperatorType.ContainsAny, false, false, "test_dsdsdsdtest1", null, new string[] { "*" }));
         }
     }
 
@@ -150,13 +173,11 @@ namespace QueueIT.KnownUserV3.SDK.Tests.IntegrationConfig
             triggerPart.IsNegative = true;
             Assert.True(UserAgentValidatorHelper.Evaluate(triggerPart, "oglebot sample useraagent"));
 
-
             triggerPart.ValueToCompare = "googlebot";
             triggerPart.Operator = ComparisonOperatorType.Contains;
             triggerPart.IsIgnoreCase = false;
             triggerPart.IsNegative = true;
             Assert.False(UserAgentValidatorHelper.Evaluate(triggerPart, "googlebot"));
-
 
             triggerPart.ValueToCompare = "googlebot";
             triggerPart.IsIgnoreCase = true;
@@ -164,6 +185,18 @@ namespace QueueIT.KnownUserV3.SDK.Tests.IntegrationConfig
             triggerPart.Operator = ComparisonOperatorType.Contains;
             Assert.True(UserAgentValidatorHelper.Evaluate(triggerPart, "Googlebot"));
 
+            triggerPart.ValueToCompare = null;
+            triggerPart.ValuesToCompare = new string[] { "googlebot" };
+            triggerPart.IsIgnoreCase = true;
+            triggerPart.IsNegative = false;
+            triggerPart.Operator = ComparisonOperatorType.ContainsAny;
+            Assert.True(UserAgentValidatorHelper.Evaluate(triggerPart, "Googlebot"));
+
+            triggerPart.ValuesToCompare = new string[] { "googlebot" };
+            triggerPart.IsIgnoreCase = true;
+            triggerPart.IsNegative = true;
+            triggerPart.Operator = ComparisonOperatorType.EqualsAny;
+            Assert.True(UserAgentValidatorHelper.Evaluate(triggerPart, "oglebot sample useraagent"));
         }
     }
 
