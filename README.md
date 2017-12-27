@@ -77,7 +77,6 @@ private void DoValidation()
             Response.Cache.SetCacheability(HttpCacheability.NoCache);
             Response.Cache.SetExpires(DateTime.UtcNow.AddHours(-1));
             Response.Cache.SetNoStore();
-            Response.Cache.SetMaxAge(new TimeSpan(0, 0, 30));
            //end
             //Send the user to the queue - either becuase hash was missing or becuase is was invalid
             Response.Redirect(validationResult.RedirectUrl);
@@ -147,7 +146,6 @@ private void DoValidationByLocalEventConfig()
             Response.Cache.SetCacheability(HttpCacheability.NoCache);
             Response.Cache.SetExpires(DateTime.UtcNow.AddHours(-1));
             Response.Cache.SetNoStore();
-            Response.Cache.SetMaxAge(new TimeSpan(0, 0, 30));
            //end
             //Send the user to the queue - either becuase hash was missing or becuase is was invalid
             Response.Redirect(validationResult.RedirectUrl);
