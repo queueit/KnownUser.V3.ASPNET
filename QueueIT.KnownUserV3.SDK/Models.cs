@@ -6,10 +6,11 @@ namespace QueueIT.KnownUserV3.SDK
     {
         public RequestValidationResult(string actionType)
         {
-            this.ActionType = actionType;
+            ActionType = actionType;
         }
-        public string RedirectUrl { get; set; }
-        public string QueueId { get; set; }
+
+        public string RedirectUrl { get; internal set; }
+        public string QueueId { get; internal set; }
         public bool DoRedirect
         {
             get
@@ -19,6 +20,7 @@ namespace QueueIT.KnownUserV3.SDK
         }
         public string EventId { get; internal set; }
         public string ActionType { get; internal set; }
+        public string RedirectType { get; internal set; }
     }
 
     public class QueueEventConfig

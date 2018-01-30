@@ -11,7 +11,7 @@ namespace QueueIT.KnownUserV3.SDK
     {
         public const string TimeStampKey = "ts";
         public const string ExtendableCookieKey = "ce";
-        public const string CookieValidityMinuteKey = "cv";
+        public const string CookieValidityMinutesKey = "cv";
         public const string HashKey = "h";
         public const string EventIdKey = "e";
         public const string QueueIdKey = "q";
@@ -38,18 +38,18 @@ namespace QueueIT.KnownUserV3.SDK
                     switch (keyValueArr[0])
                     {
                         case TimeStampKey:
-                            result.TimeStamp = DateTimeHelper.GetUnixTimeStampAsDate(keyValueArr[1]);
+                            result.TimeStamp = DateTimeHelper.GetDateTimeFromUnixTimeStamp(keyValueArr[1]);
                             break;
-                        case CookieValidityMinuteKey:
+                        case CookieValidityMinutesKey:
                             {
                                 int cookieValidity = 0;
                                 if (int.TryParse(keyValueArr[1], out cookieValidity))
                                 {
-                                    result.CookieValidityMinute = cookieValidity;
+                                    result.CookieValidityMinutes = cookieValidity;
                                 }
                                 else
                                 {
-                                    result.CookieValidityMinute = null;
+                                    result.CookieValidityMinutes = null;
                                 }
                                 break;
                             }
@@ -91,7 +91,7 @@ namespace QueueIT.KnownUserV3.SDK
 
     internal static class DateTimeHelper
     {
-        public static DateTime GetUnixTimeStampAsDate(string timeStampString)
+        public static DateTime GetDateTimeFromUnixTimeStamp(string timeStampString)
         {
             long timestampSeconds;
             if (!long.TryParse(timeStampString, out timestampSeconds))
@@ -136,7 +136,7 @@ namespace QueueIT.KnownUserV3.SDK
         public string EventId { get; set; }
         public string HashCode { get; set; }
         public bool ExtendableCookie { get; set; }
-        public int? CookieValidityMinute { get; set; }
+        public int? CookieValidityMinutes { get; set; }
         public string QueueITToken { get; set; }
         public string QueueITTokenWithoutHash { get; set; }
         public string QueueId { get; set; }

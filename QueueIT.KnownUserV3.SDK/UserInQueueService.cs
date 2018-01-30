@@ -24,13 +24,13 @@ namespace QueueIT.KnownUserV3.SDK
 
         void ExtendQueueCookie(
             string eventId,
-            int cookieValidityMinute,
+            int cookieValidityMinutes,
             string secretKey);
     }
 
     internal class UserInQueueService : IUserInQueueService
     {
-        internal const string SDK_VERSION = "3.4.0";
+        internal const string SDK_VERSION = "3.5.0";
         private readonly IUserInQueueStateRepository _userInQueueStateRepository;
 
         public UserInQueueService(IUserInQueueStateRepository queueStateRepository)
@@ -45,19 +45,24 @@ namespace QueueIT.KnownUserV3.SDK
             string customerId,
             string secretKey)
         {
-            var state = _userInQueueStateRepository.GetState(config.EventId, secretKey);
+            var state = _userInQueueStateRepository.GetState(config.EventId, config.CookieValidityMinute, secretKey);
             if (state.IsValid)
             {
                 if (state.IsStateExtendable && config.ExtendCookieValidity)
                 {
                     this._userInQueueStateRepository.Store(config.EventId,
                         state.QueueId,
-                        true,
+                        null,
                         config.CookieDomain,
-                        config.CookieValidityMinute,
+                        state.RedirectType,
                         secretKey);
                 }
-                return new RequestValidationResult(ActionType.QueueAction) { EventId = config.EventId, QueueId = state.QueueId };
+                return new RequestValidationResult(ActionType.QueueAction)
+                {
+                    EventId = config.EventId,
+                    QueueId = state.QueueId,
+                    RedirectType = state.RedirectType
+                };
             }
 
             QueueUrlParams queueParmas = QueueParameterHelper.ExtractQueueParams(queueitToken);
@@ -93,12 +98,17 @@ namespace QueueIT.KnownUserV3.SDK
             this._userInQueueStateRepository.Store(
                 config.EventId,
                 queueParams.QueueId,
-                queueParams.ExtendableCookie,
+                queueParams.CookieValidityMinutes,
                 config.CookieDomain,
-                queueParams.CookieValidityMinute ?? config.CookieValidityMinute,
+                queueParams.RedirectType,
                 secretKey);
 
-            return new RequestValidationResult(ActionType.QueueAction) { EventId = config.EventId };
+            return new RequestValidationResult(ActionType.QueueAction)
+            {
+                EventId = config.EventId,
+                QueueId = queueParams.QueueId,
+                RedirectType = queueParams.RedirectType
+            };
         }
 
         private RequestValidationResult GetVaidationErrorResult(
@@ -166,10 +176,10 @@ namespace QueueIT.KnownUserV3.SDK
 
         public void ExtendQueueCookie(
             string eventId,
-            int cookieValidityMinute,
+            int cookieValidityMinutes,
             string secretKey)
         {
-            this._userInQueueStateRepository.ExtendQueueCookie(eventId, cookieValidityMinute, secretKey);
+            this._userInQueueStateRepository.ReissueQueueCookie(eventId, cookieValidityMinutes, secretKey);
         }
 
         public RequestValidationResult ValidateCancelRequest(
@@ -178,7 +188,8 @@ namespace QueueIT.KnownUserV3.SDK
             string customerId,
             string secretKey)
         {
-            var state = _userInQueueStateRepository.GetState(config.EventId, secretKey);
+            //we do not care how long cookie is valid while canceling cookie
+            var state = _userInQueueStateRepository.GetState(config.EventId, -1, secretKey, false);
 
             if (state.IsValid)
             {
@@ -197,7 +208,8 @@ namespace QueueIT.KnownUserV3.SDK
                 {
                     RedirectUrl = redirectUrl,
                     EventId = config.EventId,
-                    QueueId = state.QueueId
+                    QueueId = state.QueueId,
+                    RedirectType = state.RedirectType
                 };
             }
             else
@@ -206,7 +218,8 @@ namespace QueueIT.KnownUserV3.SDK
                 {
                     RedirectUrl = null,
                     EventId = config.EventId,
-                    QueueId = null
+                    QueueId = null,
+                    RedirectType = null
                 };
             }
         }

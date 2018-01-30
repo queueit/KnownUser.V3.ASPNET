@@ -13,7 +13,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             var queueParameter = QueueParameterHelper.ExtractQueueParams(queueitToken);
             Assert.True(queueParameter.TimeStamp == new DateTime(2016, 12, 1, 12, 1, 1, DateTimeKind.Utc));
             Assert.True(queueParameter.EventId == "eventid");
-            Assert.True(queueParameter.CookieValidityMinute == 10);
+            Assert.True(queueParameter.CookieValidityMinutes == 10);
             Assert.True(queueParameter.ExtendableCookie == false);
             Assert.True(queueParameter.HashCode == "218b734e-d5be-4b60-ad66-9b1b326266e2");
             Assert.True(queueParameter.QueueITToken == queueitToken);
@@ -28,7 +28,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             var queueParameter = QueueParameterHelper.ExtractQueueParams(queueitToken);
             Assert.True(queueParameter.TimeStamp == new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc));
             Assert.True(queueParameter.EventId==null);
-            Assert.True(queueParameter.CookieValidityMinute ==null);
+            Assert.True(queueParameter.CookieValidityMinutes ==null);
             Assert.True(queueParameter.ExtendableCookie == false);
             Assert.True(queueParameter.HashCode == null);
             Assert.True(queueParameter.QueueITToken == queueitToken);

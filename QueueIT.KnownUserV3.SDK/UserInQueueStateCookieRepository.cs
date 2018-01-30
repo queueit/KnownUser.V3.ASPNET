@@ -10,33 +10,36 @@ namespace QueueIT.KnownUserV3.SDK
         void Store(
             string eventId,
             string queueId,
-            bool isStateExtendable,
+            int? fixedCookieValidityMinutes,
             string cookieDomain,
-            int cookieValidityMinute,
-            string customerSecretKey);
+            string redirectType,
+            string secretKey);
 
         StateInfo GetState(
             string eventId,
-            string customerSecretKey);
+            int cookieValidityMinutes,
+            string secretKey,
+            bool validateTime = true);
 
         void CancelQueueCookie(
             string eventId,
             string cookieDomain);
 
-        void ExtendQueueCookie(
+        void ReissueQueueCookie(
             string eventId,
-            int cookieValidityMinute,
+            int cookieValidityMinutes,
             string secretKey);
     }
 
     internal class UserInQueueStateCookieRepository : IUserInQueueStateRepository
     {
         private const string _QueueITDataKey = "QueueITAccepted-SDFrts345E-V3";
-        private const string _QueueITRunTimeInfoKey = "QueueITRuntimeInfo-SDFrts345E-V3";
-        private const string _IsCookieExtendableKey = "IsCookieExtendable";
         private const string _HashKey = "Hash";
-        private const string _ExpiresKey = "Expires";
+        private const string _IssueTimeKey = "IssueTime";
         private const string _QueueIdKey = "QueueId";
+        private const string _EventIdKey = "EventId";
+        private const string _RedirectTypeKey = "RedirectType";
+        private const string _FixedCookieValidityMinutesKey = "FixedValidityMins";
 
         private HttpContextBase _httpContext;
 
@@ -53,13 +56,17 @@ namespace QueueIT.KnownUserV3.SDK
         public void Store(
             string eventId,
             string queueId,
-            bool isStateExtendable,
+            int? fixedCookieValidityMinutes,
             string cookieDomain,
-            int cookieValidityMinute,
+            string redirectType,
             string secretKey)
         {
             var cookieKey = GetCookieKey(eventId);
-            var cookie = CreateCookie(eventId, queueId, isStateExtendable, cookieValidityMinute, cookieDomain, secretKey);
+
+            var cookie = CreateCookie(
+                eventId, queueId,
+                Convert.ToString(fixedCookieValidityMinutes),
+                redirectType, cookieDomain, secretKey);
 
             if (_httpContext.Response.Cookies.AllKeys.Any(key => key == cookieKey))
                 _httpContext.Response.Cookies.Remove(cookieKey);
@@ -67,34 +74,43 @@ namespace QueueIT.KnownUserV3.SDK
             _httpContext.Response.Cookies.Add(cookie);
         }
 
-        public StateInfo GetState(string eventId, string secretKey)
+        public StateInfo GetState(string eventId,
+            int cookieValidityMinutes,
+            string secretKey,
+            bool validateTime = true)
         {
             try
             {
                 var cookieKey = GetCookieKey(eventId);
                 HttpCookie cookie = _httpContext.Request.Cookies.Get(cookieKey);
                 if (cookie == null)
-                    return new StateInfo(false, string.Empty, false);
+                    return new StateInfo(false, string.Empty, null, string.Empty);
 
                 var cookieValues = CookieHelper.ToNameValueCollectionFromValue(cookie.Value);
-                if (!IsCookieValid(secretKey, cookieValues, eventId))
-                    return new StateInfo(false, string.Empty, false);
+                if (!IsCookieValid(secretKey, cookieValues, eventId, cookieValidityMinutes, validateTime))
+                    return new StateInfo(false, string.Empty, null, string.Empty);
 
-                return new StateInfo(true, cookieValues[_QueueIdKey], bool.Parse(cookieValues[_IsCookieExtendableKey])); ;
+                return new StateInfo(
+                    true, cookieValues[_QueueIdKey],
+                    !string.IsNullOrEmpty(cookieValues[_FixedCookieValidityMinutesKey])
+                        ? int.Parse(cookieValues[_FixedCookieValidityMinutesKey]) : (int?)null,
+                    cookieValues[_RedirectTypeKey]);
             }
             catch (Exception)
             {
-                return new StateInfo(false, string.Empty, false);
+                return new StateInfo(false, string.Empty, null, string.Empty);
             }
         }
 
         private string GenerateHash(
+            string eventId,
             string queueId,
-            string isCookieExtendable,
-            string expirationTime,
+            string fixedCookieValidityMinutes,
+            string redirectType,
+            string issueTime,
             string secretKey)
         {
-            string valueToHash = string.Concat(queueId, isCookieExtendable, expirationTime, secretKey);
+            string valueToHash = string.Concat(eventId, queueId, fixedCookieValidityMinutes, redirectType, issueTime);
             return HashHelper.GenerateSHA256Hash(secretKey, valueToHash);
         }
 
@@ -110,10 +126,10 @@ namespace QueueIT.KnownUserV3.SDK
 
             _httpContext.Response.Cookies.Add(cookie);
         }
-        
-        public void ExtendQueueCookie(
+
+        public void ReissueQueueCookie(
             string eventId,
-            int cookieValidityMinute,
+            int cookieValidityMinutes,
             string secretKey)
         {
             var cookieKey = GetCookieKey(eventId);
@@ -124,11 +140,14 @@ namespace QueueIT.KnownUserV3.SDK
 
             var cookieValues = CookieHelper.ToNameValueCollectionFromValue(cookie.Value);
 
-            if (!IsCookieValid(secretKey, cookieValues, eventId))
+            if (!IsCookieValid(secretKey, cookieValues, eventId, cookieValidityMinutes, true))
                 return;
 
-            var newCookie = CreateCookie(eventId, cookieValues[_QueueIdKey], bool.Parse(cookieValues[_IsCookieExtendableKey]),
-                cookieValidityMinute, cookie.Domain, secretKey);
+            var newCookie = CreateCookie(
+                eventId, cookieValues[_QueueIdKey],
+                cookieValues[_FixedCookieValidityMinutesKey],
+                cookieValues[_RedirectTypeKey],
+                cookie.Domain, secretKey);
 
             if (_httpContext.Response.Cookies.AllKeys.Any(key => key == cookieKey))
                 _httpContext.Response.Cookies.Remove(cookieKey);
@@ -139,20 +158,25 @@ namespace QueueIT.KnownUserV3.SDK
         private HttpCookie CreateCookie(
             string eventId,
             string queueId,
-            bool isCookieExtendable,
-            int cookieValidityMinute,
+            string fixedCookieValidityMinutes,
+            string redirectType,
             string cookieDomain,
             string secretKey)
         {
             var cookieKey = GetCookieKey(eventId);
-            var expirationTime = DateTime.UtcNow.Add(TimeSpan.FromMinutes(cookieValidityMinute));
-            var expirationTimeString = DateTimeHelper.GetUnixTimeStampFromDate(expirationTime).ToString();
+
+            var issueTime = DateTimeHelper.GetUnixTimeStampFromDate(DateTime.UtcNow).ToString();
 
             NameValueCollection cookieValues = new NameValueCollection();
-            cookieValues.Add(_IsCookieExtendableKey, isCookieExtendable.ToString());
-            cookieValues.Add(_HashKey, GenerateHash(queueId, isCookieExtendable.ToString(), expirationTimeString, secretKey));
-            cookieValues.Add(_ExpiresKey, expirationTimeString);
+            cookieValues.Add(_EventIdKey, eventId);
             cookieValues.Add(_QueueIdKey, queueId);
+            if (!string.IsNullOrEmpty(fixedCookieValidityMinutes))
+            {
+                cookieValues.Add(_FixedCookieValidityMinutesKey, fixedCookieValidityMinutes);
+            }
+            cookieValues.Add(_RedirectTypeKey, redirectType.ToLower());
+            cookieValues.Add(_IssueTimeKey, issueTime);
+            cookieValues.Add(_HashKey, GenerateHash(eventId.ToLower(), queueId, fixedCookieValidityMinutes, redirectType.ToLower(), issueTime, secretKey));
 
             HttpCookie cookie = new HttpCookie(cookieKey, CookieHelper.ToValueFromNameValueCollection(cookieValues));
 
@@ -160,7 +184,6 @@ namespace QueueIT.KnownUserV3.SDK
                 cookie.Domain = cookieDomain;
 
             cookie.Expires = DateTime.UtcNow.AddDays(1);
-            cookie.HttpOnly = true;
 
             return cookie;
         }
@@ -168,35 +191,62 @@ namespace QueueIT.KnownUserV3.SDK
         private bool IsCookieValid(
             string secretKey,
             NameValueCollection cookieValues,
-            string eventId)
+            string eventId,
+            int cookieValidityMinutes,
+            bool validateTime)
         {
             var storedHash = cookieValues[_HashKey];
-            var expirationTimeString = cookieValues[_ExpiresKey];
-            var cookieExtensibility = cookieValues[_IsCookieExtendableKey];
+            var issueTimeString = cookieValues[_IssueTimeKey];
             var queueId = cookieValues[_QueueIdKey];
+            var eventIdFromCookie = cookieValues[_EventIdKey];
+            var redirectType = cookieValues[_RedirectTypeKey];
+            var fixedCookieValidityMinutes = cookieValues[_FixedCookieValidityMinutesKey];
 
-            var expectedHash = GenerateHash(queueId, cookieExtensibility, expirationTimeString, secretKey);
+            var expectedHash = GenerateHash(
+                eventIdFromCookie,
+                queueId,
+                fixedCookieValidityMinutes,
+                redirectType,
+                issueTimeString,
+                secretKey);
+
             if (!expectedHash.Equals(storedHash))
                 return false;
 
-            var expirationTime = DateTimeHelper.GetUnixTimeStampAsDate(expirationTimeString);
-            if (expirationTime < DateTime.UtcNow)
+            if (eventId.ToLower() != eventIdFromCookie.ToLower())
                 return false;
 
+            if (validateTime)
+            {
+                var validity = !string.IsNullOrEmpty(fixedCookieValidityMinutes) ? int.Parse(fixedCookieValidityMinutes) : cookieValidityMinutes;
+                var expirationTime = DateTimeHelper.GetDateTimeFromUnixTimeStamp(issueTimeString).AddMinutes(validity);
+                if (expirationTime < DateTime.UtcNow)
+                    return false;
+            }
             return true;
         }
     }
 
-    class StateInfo
+    internal class StateInfo
     {
         public bool IsValid { get; private set; }
         public string QueueId { get; private set; }
-        public bool IsStateExtendable { get; private set; }
-        public StateInfo(bool isValid, string queueId, bool isStateExtendable)
+        public bool IsStateExtendable
         {
-            this.IsValid = isValid;
-            this.QueueId = queueId;
-            this.IsStateExtendable = isStateExtendable;
+            get
+            {
+                return IsValid && !FixedCookieValidityMinutes.HasValue;
+            }
+        }
+        public int? FixedCookieValidityMinutes { get; private set; }
+        public string RedirectType { get; private set; }
+
+        public StateInfo(bool isValid, string queueId, int? fixedCookieValidityMinutes, string redirectType)
+        {
+            IsValid = isValid;
+            QueueId = queueId;
+            FixedCookieValidityMinutes = fixedCookieValidityMinutes;
+            RedirectType = redirectType;
         }
     }
 }
