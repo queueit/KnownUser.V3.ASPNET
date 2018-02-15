@@ -187,6 +187,8 @@ namespace QueueIT.KnownUserV3.SDK.Tests
         public void CancelRequestByLocalConfig_NullQueueDomain_Test()
         {
             // Arrange
+            var httpContextMock = new HttpContextMock() { MockRequest = new MockHttpRequest() { } };
+            KnownUser._HttpContextBase = httpContextMock;
             UserInQueueServiceMock mock = new UserInQueueServiceMock();
             KnownUser._UserInQueueService = (mock);
             bool exceptionWasThrown = false;
@@ -215,6 +217,8 @@ namespace QueueIT.KnownUserV3.SDK.Tests
         public void CancelRequestByLocalConfig_EventIdNull_Test()
         {
             // Arrange
+            var httpContextMock = new HttpContextMock() { MockRequest = new MockHttpRequest() { } };
+            KnownUser._HttpContextBase = httpContextMock;
             UserInQueueServiceMock mock = new UserInQueueServiceMock();
             KnownUser._UserInQueueService = (mock);
             bool exceptionWasThrown = false;
@@ -242,6 +246,8 @@ namespace QueueIT.KnownUserV3.SDK.Tests
         public void CancelRequestByLocalConfig_CancelEventConfigNull_Test()
         {
             // Arrange
+            var httpContextMock = new HttpContextMock() { MockRequest = new MockHttpRequest() { } };
+            KnownUser._HttpContextBase = httpContextMock;
             UserInQueueServiceMock mock = new UserInQueueServiceMock();
             KnownUser._UserInQueueService = (mock);
             bool exceptionWasThrown = false;
@@ -265,6 +271,8 @@ namespace QueueIT.KnownUserV3.SDK.Tests
         public void CancelRequestByLocalConfig_CustomerIdNull_Test()
         {
             // Arrange
+            var httpContextMock = new HttpContextMock() { MockRequest = new MockHttpRequest() { } };
+            KnownUser._HttpContextBase = httpContextMock;
             UserInQueueServiceMock mock = new UserInQueueServiceMock();
             KnownUser._UserInQueueService = (mock);
             bool exceptionWasThrown = false;
@@ -288,6 +296,8 @@ namespace QueueIT.KnownUserV3.SDK.Tests
         public void CancelRequestByLocalConfig_SeceretKeyNull_Test()
         {
             // Arrange
+            var httpContextMock = new HttpContextMock() { MockRequest = new MockHttpRequest() { } };
+            KnownUser._HttpContextBase = httpContextMock;
             UserInQueueServiceMock mock = new UserInQueueServiceMock();
             KnownUser._UserInQueueService = (mock);
             bool exceptionWasThrown = false;
@@ -311,6 +321,8 @@ namespace QueueIT.KnownUserV3.SDK.Tests
         public void CancelRequestByLocalConfig_TargetUrl_Test()
         {
             // Arrange
+            var httpContextMock = new HttpContextMock() { MockRequest = new MockHttpRequest() { } };
+            KnownUser._HttpContextBase = httpContextMock;
             UserInQueueServiceMock mock = new UserInQueueServiceMock();
             KnownUser._UserInQueueService = (mock);
             bool exceptionWasThrown = false;
@@ -527,6 +539,8 @@ namespace QueueIT.KnownUserV3.SDK.Tests
         public void ResolveRequestByLocalEventConfig_NullQueueDomain_Test()
         {
             // Arrange
+            var httpContextMock = new HttpContextMock() { MockRequest = new MockHttpRequest() { } };
+            KnownUser._HttpContextBase = httpContextMock;
             UserInQueueServiceMock mock = new UserInQueueServiceMock();
             KnownUser._UserInQueueService = (mock);
             bool exceptionWasThrown = false;
@@ -560,6 +574,8 @@ namespace QueueIT.KnownUserV3.SDK.Tests
         public void ResolveQueueRequestByLocalConfig_InvalidCookieValidityMinute_Test()
         {
             // Arrange
+            var httpContextMock = new HttpContextMock() { MockRequest = new MockHttpRequest() { } };
+            KnownUser._HttpContextBase = httpContextMock;
             UserInQueueServiceMock mock = new UserInQueueServiceMock();
             KnownUser._UserInQueueService = (mock);
             bool exceptionWasThrown = false;
