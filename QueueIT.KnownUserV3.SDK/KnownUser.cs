@@ -10,6 +10,7 @@ namespace QueueIT.KnownUserV3.SDK
     {
         public const string QueueITTokenKey = "queueittoken";
         public const string QueueITDebugKey = "queueitdebug";
+        public const string QueueITAjaxHeaderKey = "x-queueit-ajaxpageurl";
 
         public static RequestValidationResult ValidateRequestByIntegrationConfig(
             string currentUrlWithoutQueueITToken, string queueitToken,
@@ -80,6 +81,7 @@ namespace QueueIT.KnownUserV3.SDK
 
             try
             {
+                targetUrl = GenerateTargetUrl(targetUrl);
                 return CancelRequestByLocalConfig(targetUrl, queueitToken, cancelConfig, customerId, secretKey, debugEntries);
             }
             finally
@@ -98,7 +100,6 @@ namespace QueueIT.KnownUserV3.SDK
                 debugEntries["QueueitToken"] = queueitToken;
                 debugEntries["CancelConfig"] = cancelConfig != null ? cancelConfig.ToString() : "NULL";
                 debugEntries["OriginalUrl"] = GetHttpContextBase().Request.Url.AbsoluteUri;
-
                 LogExtraRequestDetails(debugEntries);
             }
             if (string.IsNullOrEmpty(targetUrl))
@@ -115,8 +116,11 @@ namespace QueueIT.KnownUserV3.SDK
                 throw new ArgumentException("QueueDomain from cancelEventConfig can not be null or empty.");
 
             var userInQueueService = GetUserInQueueService();
-            return userInQueueService.ValidateCancelRequest(targetUrl, cancelConfig, customerId, secretKey);
+            var result = userInQueueService.ValidateCancelRequest(targetUrl, cancelConfig, customerId, secretKey);
+            result.IsAjaxResult = IsQueueAjaxCall();
+            return result;
         }
+
 
         public static RequestValidationResult ResolveQueueRequestByLocalConfig(
             string targetUrl, string queueitToken, QueueEventConfig queueConfig,
@@ -126,6 +130,7 @@ namespace QueueIT.KnownUserV3.SDK
 
             try
             {
+                targetUrl = GenerateTargetUrl(targetUrl);
                 return ResolveQueueRequestByLocalConfig(targetUrl, queueitToken, queueConfig, customerId, secretKey, debugEntries);
             }
             finally
@@ -144,7 +149,6 @@ namespace QueueIT.KnownUserV3.SDK
                 debugEntries["QueueitToken"] = queueitToken;
                 debugEntries["QueueConfig"] = queueConfig != null ? queueConfig.ToString() : "NULL";
                 debugEntries["OriginalUrl"] = GetHttpContextBase().Request.Url.AbsoluteUri;
-
                 LogExtraRequestDetails(debugEntries);
             }
             if (string.IsNullOrEmpty(customerId))
@@ -163,7 +167,9 @@ namespace QueueIT.KnownUserV3.SDK
             queueitToken = queueitToken ?? string.Empty;
 
             var userInQueueService = GetUserInQueueService();
-            return userInQueueService.ValidateQueueRequest(targetUrl, queueitToken, queueConfig, customerId, secretKey);
+            var result = userInQueueService.ValidateQueueRequest(targetUrl, queueitToken, queueConfig, customerId, secretKey);
+            result.IsAjaxResult = IsQueueAjaxCall();
+            return result;
         }
 
         public static void ExtendQueueCookie(
@@ -254,7 +260,7 @@ namespace QueueIT.KnownUserV3.SDK
                     targetUrl = "";
                     break;
                 default:
-                    targetUrl = currentUrlWithoutQueueITToken;
+                    targetUrl = GenerateTargetUrl(currentUrlWithoutQueueITToken);
                     break;
             }
 
@@ -286,14 +292,27 @@ namespace QueueIT.KnownUserV3.SDK
                 Version = customerIntegrationInfo.Version,
                 CookieDomain = matchedConfig.CookieDomain
             };
+            var targetUrl = GenerateTargetUrl(currentUrlWithoutQueueITToken);
+            return CancelRequestByLocalConfig(targetUrl, queueitToken, cancelEventConfig, customerId, secretKey, debugEntries);
+        }
 
-            return CancelRequestByLocalConfig(currentUrlWithoutQueueITToken, queueitToken, cancelEventConfig, customerId, secretKey, debugEntries);
+        private static string GenerateTargetUrl(string originalTargetUrl)
+        {
+            return !IsQueueAjaxCall() ?
+                        originalTargetUrl :
+                        HttpUtility.UrlDecode(GetHttpContextBase().Request.Headers[QueueITAjaxHeaderKey]);
         }
 
         private static RequestValidationResult HandleIgnoreAction()
         {
             var userInQueueService = GetUserInQueueService();
-            return userInQueueService.GetIgnoreResult();
+            var result = userInQueueService.GetIgnoreResult();
+            result.IsAjaxResult = IsQueueAjaxCall();
+            return result;
+        }
+        private static bool IsQueueAjaxCall()
+        {
+            return !string.IsNullOrEmpty(GetHttpContextBase().Request.Headers[QueueITAjaxHeaderKey]);
         }
     }
 }

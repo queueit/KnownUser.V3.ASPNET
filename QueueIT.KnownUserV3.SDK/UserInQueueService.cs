@@ -30,7 +30,7 @@ namespace QueueIT.KnownUserV3.SDK
 
     internal class UserInQueueService : IUserInQueueService
     {
-        internal const string SDK_VERSION = "3.5.0";
+        internal const string SDK_VERSION = "3.5.1";
         private readonly IUserInQueueStateRepository _userInQueueStateRepository;
 
         public UserInQueueService(IUserInQueueStateRepository queueStateRepository)

@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Web;
 
 namespace QueueIT.KnownUserV3.SDK
 {
     public class RequestValidationResult
     {
+
         public RequestValidationResult(string actionType)
         {
             ActionType = actionType;
@@ -21,6 +23,24 @@ namespace QueueIT.KnownUserV3.SDK
         public string EventId { get; internal set; }
         public string ActionType { get; internal set; }
         public string RedirectType { get; internal set; }
+        public bool IsAjaxResult { get; internal set; }
+        public string AjaxQueueRedirectHeaderKey
+        {
+            get
+            {
+                return "x-queueit-redirect";
+            }
+        }
+        public string AjaxRedirectUrl {
+            get
+            {
+                if (!string.IsNullOrEmpty(RedirectUrl))
+                {
+                    return HttpUtility.UrlEncode(RedirectUrl);
+                }
+                return string.Empty;
+            }
+        }
     }
 
     public class QueueEventConfig
