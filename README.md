@@ -181,15 +181,16 @@ private void DoValidationByLocalEventConfig()
 ```
 ### Protecting ajax calls on static pages
 If you have some static html pages (might be behind cache servers) and you have some ajax calls from those pages needed to be protected by KnownUser library you need to follow these steps:
-1) Make sure KnownUser code will not run on static pages (by ignoring those URLs in your integration configuration).
-2) Protect static pages by including this Javascript code:
+1) You are using v.3.5.1 (or later) of the KnownUser library.
+2) Make sure KnownUser code will not run on static pages (by ignoring those URLs in your integration configuration).
+3) Protect static pages by including this Javascript code:
 ```
 <script
         type="text/javascript"
         src="//static.queue-it.net/script/knownuserv3.js">
 </script>
 ```
-3) Use the following method to protect all dynamic calls (including dynamic pages and ajax calls).
+4) Use the following method to protect all dynamic calls (including dynamic pages and ajax calls).
 
 ```
 private void DoValidation()
