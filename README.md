@@ -55,8 +55,7 @@ The following method is all that is needed to validate that a user has been thro
 ```
 private void DoValidation()
 {
-
-    try
+    try
     {
         var customerId = "Your Queue-it customer ID";
         var secretKey = "Your 72 char secrete key as specified in Go Queue-it self-service platform";
@@ -80,12 +79,17 @@ private void DoValidation()
            //end
             //Send the user to the queue - either becuase hash was missing or becuase is was invalid
             Response.Redirect(validationResult.RedirectUrl);
+            HttpContext.Current.ApplicationInstance.CompleteRequest();
+            
         }
         else
         {
             //Request can continue - we remove queueittoken form querystring parameter to avoid sharing of user specific token
             if(HttpContext.Current.Request.Url.ToString().Contains(KnownUser.QueueITTokenKey))
+            {
                 Response.Redirect(pureUrl);
+                HttpContext.Current.ApplicationInstance.CompleteRequest();
+            }
         }
     }
     catch (Exception ex)
@@ -98,6 +102,9 @@ private void DoValidation()
 ```
 
 ## Alternative Implementation
+
+### Queue configuration
+
 If your application server (maybe due to security reasons) is not allowed to do external GET requests, then you have three options:
 
 1. Manually download the configuration file from Queue-it Go self-service portal, save it on your application server and load it from local disk
@@ -146,15 +153,19 @@ private void DoValidationByLocalEventConfig()
             Response.Cache.SetCacheability(HttpCacheability.NoCache);
             Response.Cache.SetExpires(DateTime.UtcNow.AddHours(-1));
             Response.Cache.SetNoStore();
-           //end
+            //end
             //Send the user to the queue - either becuase hash was missing or becuase is was invalid
             Response.Redirect(validationResult.RedirectUrl);
+            HttpContext.Current.ApplicationInstance.CompleteRequest();
         }
         else
         {
             //Request can continue - we remove queueittoken form querystring parameter to avoid sharing of user specific token
             if (HttpContext.Current.Request.Url.ToString().Contains(KnownUser.QueueITTokenKey))
+            {
                 Response.Redirect(pureUrl);
+                HttpContext.Current.ApplicationInstance.CompleteRequest();
+            }
         }
     }
     catch (System.Threading.ThreadAbortException)
@@ -167,4 +178,74 @@ private void DoValidationByLocalEventConfig()
         //Please log the error and let user continue 
     }
 }
+```
+### Protecting ajax calls on static pages
+If you have some static html pages (might be behind cache servers) and you have some ajax calls from those pages needed to be protected by KnownUser library you need to follow these steps:
+1) Make sure KnownUser code will not run on static pages (by ignoring those URLs in your integration configuration).
+2) Protect static pages by including this Javascript code:
+```
+<script
+        type="text/javascript"
+        src="//static.queue-it.net/script/knownuserv3.js">
+</script>
+```
+3) Use the following method to protect all dynamic calls (including dynamic pages and ajax calls).
+
+```
+private void DoValidation()
+{
+    try
+    {
+        var customerId = "Your Queue-it customer ID";
+        var secretKey = "Your 72 char secrete key as specified in Go Queue-it self-service platform";
+
+        var queueitToken = Request.QueryString[KnownUser.QueueITTokenKey];
+        var pureUrl = Regex.Replace(Request.Url.ToString(), @"([\?&])(" + KnownUser.QueueITTokenKey + "=[^&]*)", string.Empty, RegexOptions.IgnoreCase);
+        // The pureUrl is used to match Triggers and as the Target url (where to return the users to)
+        // It is therefor important that the pureUrl is exactly the url of the users browsers. So if your webserver is 
+        // e.g. behind a load balancer that modifies the host name or port, reformat the pureUrl before proceeding
+        var integrationConfig = IntegrationConfigProvider.GetCachedIntegrationConfig(customerId);
+  
+        //Verify if the user has been through the queue
+        var validationResult = KnownUser.ValidateRequestByIntegrationConfig(pureUrl, queueitToken, integrationConfig, customerId, secretKey);
+
+        if (validationResult.DoRedirect)
+        {
+            //Adding no cache headers to prevent browsers to cache requests
+            Response.Cache.SetCacheability(HttpCacheability.NoCache);
+            Response.Cache.SetExpires(DateTime.UtcNow.AddHours(-1));
+            Response.Cache.SetNoStore();
+            //end
+           
+            if (validationResult.IsAjaxResult)
+            {
+                //In case of ajax call send the user to the queue by sending a custom queue-it header and redirecting user to queue from javascript
+               Response.Headers.Add(validationResult.AjaxQueueRedirectHeaderKey, validationResult.AjaxRedirectUrl);
+            }
+            else
+            {
+               //Send the user to the queue - either becuase hash was missing or becuase is was invalid
+               Response.Redirect(validationResult.RedirectUrl);
+            }
+            HttpContext.Current.ApplicationInstance.CompleteRequest();
+        }
+        else
+        {
+            //Request can continue - we remove queueittoken form querystring parameter to avoid sharing of user specific token
+            if(HttpContext.Current.Request.Url.ToString().Contains(KnownUser.QueueITTokenKey))
+            {
+                Response.Redirect(pureUrl);
+                HttpContext.Current.ApplicationInstance.CompleteRequest();
+            }
+        }
+    }
+    catch (Exception ex)
+    {
+        //There was an error validationg the request
+        //Use your own logging framework to log the Exception
+        //This was a configuration exception, so we let the user continue
+    }
+}
+```
+
 ```
