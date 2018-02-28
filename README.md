@@ -78,7 +78,7 @@ private void DoValidation()
             Response.Cache.SetNoStore();
            //end
             //Send the user to the queue - either becuase hash was missing or becuase is was invalid
-            Response.Redirect(validationResult.RedirectUrl);
+            Response.Redirect(validationResult.RedirectUrl,false);
             HttpContext.Current.ApplicationInstance.CompleteRequest();
             
         }
@@ -87,7 +87,7 @@ private void DoValidation()
             //Request can continue - we remove queueittoken form querystring parameter to avoid sharing of user specific token
             if(HttpContext.Current.Request.Url.ToString().Contains(KnownUser.QueueITTokenKey))
             {
-                Response.Redirect(pureUrl);
+                Response.Redirect(pureUrl,false);
                 HttpContext.Current.ApplicationInstance.CompleteRequest();
             }
         }
@@ -155,7 +155,7 @@ private void DoValidationByLocalEventConfig()
             Response.Cache.SetNoStore();
             //end
             //Send the user to the queue - either becuase hash was missing or becuase is was invalid
-            Response.Redirect(validationResult.RedirectUrl);
+            Response.Redirect(validationResult.RedirectUrl,false);
             HttpContext.Current.ApplicationInstance.CompleteRequest();
         }
         else
@@ -226,7 +226,7 @@ private void DoValidation()
             else
             {
                //Send the user to the queue - either becuase hash was missing or becuase is was invalid
-               Response.Redirect(validationResult.RedirectUrl);
+               Response.Redirect(validationResult.RedirectUrl,false);
             }
             HttpContext.Current.ApplicationInstance.CompleteRequest();
         }
@@ -235,7 +235,7 @@ private void DoValidation()
             //Request can continue - we remove queueittoken form querystring parameter to avoid sharing of user specific token
             if(HttpContext.Current.Request.Url.ToString().Contains(KnownUser.QueueITTokenKey))
             {
-                Response.Redirect(pureUrl);
+                Response.Redirect(pureUrl, false);
                 HttpContext.Current.ApplicationInstance.CompleteRequest();
             }
         }
