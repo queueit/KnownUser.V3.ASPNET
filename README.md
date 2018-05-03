@@ -183,11 +183,15 @@ private void DoValidationByLocalEventConfig()
 If you have some static html pages (might be behind cache servers) and you have some ajax calls from those pages needed to be protected by KnownUser library you need to follow these steps:
 1) You are using v.3.5.1 (or later) of the KnownUser library.
 2) Make sure KnownUser code will not run on static pages (by ignoring those URLs in your integration configuration).
-3) Protect static pages by including this Javascript code:
+3) Add below JavaScript tags to static pages:
 ```
+<script type="text/javascript" src="//static.queue-it.net/script/queueclient.min.js"></script>
 <script
-        type="text/javascript"
-        src="//static.queue-it.net/script/knownuserv3.js">
+  data-queueit-intercept-domain="{YOUR_CURRENT_DOMAIN}"
+  data-queueit-intercept="true"
+  data-queueit-c="{YOUR_CUSTOMER_ID}"
+  type="text/javascript"
+  src="//static.queue-it.net/script/queueconfigloader.min.js">
 </script>
 ```
 4) Use the following method to protect all dynamic calls (including dynamic pages and ajax calls).
@@ -233,7 +237,8 @@ private void DoValidation()
         else
         {
             //Request can continue - we remove queueittoken form querystring parameter to avoid sharing of user specific token
-            if(HttpContext.Current.Request.Url.ToString().Contains(KnownUser.QueueITTokenKey))
+            if(HttpContext.Current.Request.Url.ToString().Contains(KnownUser.QueueITTokenKey)
+                                                             && !string.IsNullOrEmpty(validationResult.ActionType))
             {
                 Response.Redirect(pureUrl, false);
                 HttpContext.Current.ApplicationInstance.CompleteRequest();
