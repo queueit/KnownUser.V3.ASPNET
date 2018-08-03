@@ -8,16 +8,16 @@ These Triggers and Actions are specified in the Go Queue-it self-service portal.
 ![Configuration Provider flow](https://github.com/queueit/KnownUser.V3.ASPNET/blob/master/Documentation/ConfigProviderExample.png)
 
 
-There are 3 possible ways you can retrive the integration config information and provide it for the Known User SDK:
+There are 3 possible ways you can retrieve the integration config information and provide it for the Known User SDK:
 
 **1. Time based pulling:**
-   In this method, you would have a long running tasks retrieving the latest version of published integration with a sepecified time interval from Queue-it repository with the address **https://[your-customer-id].queue-it.net/status/integrationconfig/[your-customer-id]** (to make it sure the request won't be cached you can add some random number as query string at the end of link for each request) and then cache and reuse retrieved value until next interval.
+   In this method, you would have a long running tasks retrieving the latest version of published integration with a sepecified time interval from Queue-it repository with the address **https://[your-customer-id].queue-it.net/status/integrationconfig/[your-customer-id]** (to make it sure the request won't be cached you can add some random number as query string at the end of link for each request) and then cache and reuse the retrieved value until the next interval.
    The [IntegrationConfigProvider.cs]   (https://github.com/queueit/KnownUser.V3.ASPNET/blob/master/Documentation/IntegrationConfigProvider.cs) file is an example of how the download and caching of the configuration can be done. 
    *This is just an example*, but if you make your own downloader, please cache the result for 5 minutes to limit number of download requests.
 
 **2. Pushing from Queue-it Go self-service to your platform:**
-    In this method, you will implement an HTTP endpoint to receive and update integration configuration in your infrastructure. Ensure that this endpoint address is entered at integration settings in Go Queue-it self-service portal. Then after changing and publishing integration config using Go Queue-it self-service portal we will send the new configuration to your specified endpoint.
-The push performed when you publish your latest version from Go Queue-it self-service portal will be a HTTP PUT request containing integration data needed by KnownUser SDK. This data will be JSON formatted with a hex-encoded version of the integration config and a SHA256 hash of that value based on your secret key.
+    In this method, you will implement an HTTP endpoint to receive and update integration configuration in your infrastructure. Ensure that this endpoint address is entered in the integration settings in the Go Queue-it self-service portal. Then after changing and publishing the integration config using the Go Queue-it self-service portal we will send the new configuration to your specified endpoint.
+The push performed when you publish your latest version from the Go Queue-it self-service portal will be a HTTP PUT request containing integration data needed by the KnownUser SDK. This data will be JSON formatted with a hex-encoded version of the integration config and a SHA256 hash of that value based on your secret key.
 1st step is to hex-decode the "integrationInfo" field to get the integration configuration. 
 2nd step is to verify the authenticity of the request performing a SHA256 hashing of the "integrationInfo" field (the orginal hex-encoded field) using your secret key and then comparing the result with the "hash" field (if identical the request is authentic)
 
@@ -73,8 +73,8 @@ public static string ConvertHexToString(string hexString)
 }
 ```
 **3. Manually updating integration configuration:**
-    In this method, after changing and publishing your configuration using Go Queue-it self-service portal, you are able to download the  file and then manually copy and paste it to your intfrastructure.
+    In this method, after changing and publishing your configuration using the Go Queue-it self-service portal, you are able to download the file and then manually copy and paste it to your intfrastructure.
 
 ## Helper functions
-The [QueueITHelpsers.cs](https://github.com/queueit/KnownUser.V3.ASPNET/blob/master/Documentation/QueueITHelpers.cs) file includes some helper function 
+The [QueueITHelpers.cs](https://github.com/queueit/KnownUser.V3.ASPNET/blob/master/Documentation/QueueITHelpers.cs) file includes some helper functions 
 to make the reading of the `queueittoken` easier. 
