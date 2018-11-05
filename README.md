@@ -77,7 +77,7 @@ private void DoValidation()
             Response.Cache.SetExpires(DateTime.UtcNow.AddHours(-1));
             Response.Cache.SetNoStore();
            //end
-            //Send the user to the queue - either becuase hash was missing or becuase is was invalid
+            //Send the user to the queue - either because hash was missing or because is was invalid
             Response.Redirect(validationResult.RedirectUrl,false);
             HttpContext.Current.ApplicationInstance.CompleteRequest();
             
