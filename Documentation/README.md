@@ -13,7 +13,7 @@ There are 3 possible ways you can retrieve the integration config information an
 **1. Time based pulling:**
    In this method, you would have a long running tasks retrieving the latest version of published integration with a sepecified time interval from Queue-it repository with the address **https://[your-customer-id].queue-it.net/status/integrationconfig/[your-customer-id]** (to make it sure the request won't be cached you can add some random number as query string at the end of link for each request) and then cache and reuse the retrieved value until the next interval.
    The [IntegrationConfigProvider.cs]   (https://github.com/queueit/KnownUser.V3.ASPNET/blob/master/Documentation/IntegrationConfigProvider.cs) file is an example of how the download and caching of the configuration can be done. 
-   *This is just an example*, but if you make your own downloader, please cache the result for 5 minutes to limit number of download requests.
+   *This is just an example*, but if you make your own downloader, please cache the result for 5 - 10 minutes to limit number of download requests. You should NEVER download the configuration as part of the request handling.
 
 **2. Pushing from Queue-it Go self-service to your platform:**
     In this method, you will implement an HTTP endpoint to receive and update integration configuration in your infrastructure. Ensure that this endpoint address is entered in the integration settings in the Go Queue-it self-service portal. Then after changing and publishing the integration config using the Go Queue-it self-service portal we will send the new configuration to your specified endpoint.
