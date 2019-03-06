@@ -252,5 +252,3 @@ private void DoValidation()
     }
 }
 ```
-
-```
