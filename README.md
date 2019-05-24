@@ -60,14 +60,14 @@ private void DoValidation()
         var secretKey = "Your 72 char secrete key as specified in Go Queue-it self-service platform";
 
         var queueitToken = Request.QueryString[KnownUser.QueueITTokenKey];
-        var pureUrl = Regex.Replace(Request.Url.ToString(), @"([\?&])(" + KnownUser.QueueITTokenKey + "=[^&]*)", string.Empty, RegexOptions.IgnoreCase);
-        // The pureUrl is used to match Triggers and as the Target url (where to return the users to)
-        // It is therefor important that the pureUrl is exactly the url of the users browsers. So if your webserver is 
-        // e.g. behind a load balancer that modifies the host name or port, reformat the pureUrl before proceeding
+        var currentUrlWithoutQueueITToken = Regex.Replace(Request.Url.AbsoluteUri, @"([\?&])(" + KnownUser.QueueITTokenKey + "=[^&]*)", string.Empty, RegexOptions.IgnoreCase);
+        // The currentUrlWithoutQueueITToken is used to match Triggers and as the Target url (where to return the users to)
+        // It is therefor important that the currentUrlWithoutQueueITToken is exactly the url of the users browsers. So if your webserver is 
+        // e.g. behind a load balancer that modifies the host name or port, reformat the currentUrlWithoutQueueITToken before proceeding
         var integrationConfig = IntegrationConfigProvider.GetCachedIntegrationConfig(customerId);
   
         //Verify if the user has been through the queue
-        var validationResult = KnownUser.ValidateRequestByIntegrationConfig(pureUrl, queueitToken, integrationConfig, customerId, secretKey);
+        var validationResult = KnownUser.ValidateRequestByIntegrationConfig(currentUrlWithoutQueueITToken, queueitToken, integrationConfig, customerId, secretKey);
 
         if (validationResult.DoRedirect)
         {
@@ -84,9 +84,9 @@ private void DoValidation()
         else
         {
             //Request can continue - we remove queueittoken form querystring parameter to avoid sharing of user specific token
-            if(HttpContext.Current.Request.Url.ToString().Contains(KnownUser.QueueITTokenKey))
+            if(HttpContext.Current.Request.Url.AbsoluteUri.Contains(KnownUser.QueueITTokenKey))
             {
-                Response.Redirect(pureUrl,false);
+                Response.Redirect(currentUrlWithoutQueueITToken, false);
                 HttpContext.Current.ApplicationInstance.CompleteRequest();
             }
         }
@@ -131,7 +131,8 @@ private void DoValidationByLocalEventConfig()
         var secretKey = "Your 72 char secret key as specified in Go Queue-it self-service platform";
 
         var queueitToken = Request.QueryString[KnownUser.QueueITTokenKey];
-        var pureUrl = Regex.Replace(Request.Url.ToString(), @"([\?&])(" + KnownUser.QueueITTokenKey + "=[^&]*)", string.Empty, RegexOptions.IgnoreCase);
+        var currentUrlWithoutQueueITToken = Regex.Replace(Request.Url.AbsoluteUri, @"([\?&])(" + KnownUser.QueueITTokenKey + "=[^&]*)", string.Empty, RegexOptions.IgnoreCase);
+
         var eventConfig = new QueueEventConfig()
         {
             EventId = "event1", //ID of the queue to use
@@ -144,7 +145,7 @@ private void DoValidationByLocalEventConfig()
         };
 
         //Verify if the user has been through the queue
-        var validationResult = KnownUser.ResolveQueueRequestByLocalConfig(pureUrl, queueitToken, eventConfig, customerId, secretKey);
+        var validationResult = KnownUser.ResolveQueueRequestByLocalConfig(currentUrlWithoutQueueITToken, queueitToken, eventConfig, customerId, secretKey);
 
         if (validationResult.DoRedirect)
         {
@@ -160,9 +161,9 @@ private void DoValidationByLocalEventConfig()
         else
         {
             //Request can continue - we remove queueittoken form querystring parameter to avoid sharing of user specific token
-            if (HttpContext.Current.Request.Url.ToString().Contains(KnownUser.QueueITTokenKey))
+            if (HttpContext.Current.Request.AbsoluteUri.Contains(KnownUser.QueueITTokenKey))
             {
-                Response.Redirect(pureUrl);
+                Response.Redirect(currentUrlWithoutQueueITToken);
                 HttpContext.Current.ApplicationInstance.CompleteRequest();
             }
         }
@@ -204,14 +205,14 @@ private void DoValidation()
         var secretKey = "Your 72 char secrete key as specified in Go Queue-it self-service platform";
 
         var queueitToken = Request.QueryString[KnownUser.QueueITTokenKey];
-        var pureUrl = Regex.Replace(Request.Url.ToString(), @"([\?&])(" + KnownUser.QueueITTokenKey + "=[^&]*)", string.Empty, RegexOptions.IgnoreCase);
-        // The pureUrl is used to match Triggers and as the Target url (where to return the users to)
-        // It is therefor important that the pureUrl is exactly the url of the users browsers. So if your webserver is 
-        // e.g. behind a load balancer that modifies the host name or port, reformat the pureUrl before proceeding
+        var currentUrlWithoutQueueITToken = Regex.Replace(Request.Url.AbsoluteUri, @"([\?&])(" + KnownUser.QueueITTokenKey + "=[^&]*)", string.Empty, RegexOptions.IgnoreCase);
+        // The currentUrlWithoutQueueITToken is used to match Triggers and as the Target url (where to return the users to)
+        // It is therefor important that the currentUrlWithoutQueueITToken is exactly the url of the users browsers. So if your webserver is 
+        // e.g. behind a load balancer that modifies the host name or port, reformat the currentUrlWithoutQueueITToken before proceeding
         var integrationConfig = IntegrationConfigProvider.GetCachedIntegrationConfig(customerId);
   
         //Verify if the user has been through the queue
-        var validationResult = KnownUser.ValidateRequestByIntegrationConfig(pureUrl, queueitToken, integrationConfig, customerId, secretKey);
+        var validationResult = KnownUser.ValidateRequestByIntegrationConfig(currentUrlWithoutQueueITToken, queueitToken, integrationConfig, customerId, secretKey);
 
         if (validationResult.DoRedirect)
         {
@@ -236,10 +237,10 @@ private void DoValidation()
         else
         {
             //Request can continue - we remove queueittoken form querystring parameter to avoid sharing of user specific token
-            if(HttpContext.Current.Request.Url.ToString().Contains(KnownUser.QueueITTokenKey)
+            if(HttpContext.Current.Request.Url.AbsoluteUri.Contains(KnownUser.QueueITTokenKey)
                                                              && !string.IsNullOrEmpty(validationResult.ActionType))
             {
-                Response.Redirect(pureUrl, false);
+                Response.Redirect(currentUrlWithoutQueueITToken, false);
                 HttpContext.Current.ApplicationInstance.CompleteRequest();
             }
         }
