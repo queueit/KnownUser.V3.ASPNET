@@ -10,6 +10,23 @@ namespace QueueIT.KnownUserV3.SDK
         {
             ActionType = actionType;
         }
+        
+        public RequestValidationResult(
+            string actionType,
+            string redirectUrl,
+            string queueId,
+            string eventId,
+            string actionType,
+            string redirectType,
+            bool isAjaxResult)
+        {
+            ActionType = actionType;
+            RedirectUrl = redirectUrl;
+            QueueId = queueId;
+            EventId = eventId;
+            RedirectType = redirectType;
+            IsAjaxResult = isAjaxResult;
+        }
 
         public string RedirectUrl { get; internal set; }
         public string QueueId { get; internal set; }
