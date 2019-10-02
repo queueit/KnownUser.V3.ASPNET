@@ -93,9 +93,9 @@ private void DoValidation()
     }
     catch (Exception ex)
     {
-        //There was an error validationg the request
-        //Use your own logging framework to log the Exception
-        //This was a configuration exception, so we let the user continue
+        // There was an error validationg the request
+        // Use your own logging framework to log the Exception
+        // This was a configuration exception, so we let the user continue
     }
 }
 ```
@@ -174,8 +174,9 @@ private void DoValidationByLocalEventConfig()
     }
     catch (Exception ex)
     {
-        //There was an error validationg the request
-        //Please log the error and let user continue 
+        // There was an error validationg the request
+        // Use your own logging framework to log the Exception
+        // This was a configuration exception, so we let the user continue
     }
 }
 ```
@@ -247,9 +248,9 @@ private void DoValidation()
     }
     catch (Exception ex)
     {
-        //There was an error validationg the request
-        //Use your own logging framework to log the Exception
-        //This was a configuration exception, so we let the user continue
+        // There was an error validationg the request
+        // Use your own logging framework to log the Exception
+        // This was a configuration exception, so we let the user continue
     }
 }
 ```
