@@ -30,7 +30,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             fakeResponse.Stub(stub => stub.Cookies).Return(cookies);
 
             var testObject = new UserInQueueStateCookieRepository(fakeContext);
-            testObject.Store(eventId, queueId, null, cookieDomain, "Queue", secretKey);
+            testObject.Store(eventId, queueId, null, cookieDomain, "Queue", secretKey, null);
             var cookieValues = CookieHelper.ToNameValueCollectionFromValue(cookies[cookieKey].Value);
             Assert.True(cookies[cookieKey].Expires.Subtract(DateTime.UtcNow.AddDays(1)) < TimeSpan.FromMinutes(1));
             Assert.True(
@@ -76,7 +76,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests
 
             var testObject = new UserInQueueStateCookieRepository(fakeContext);
 
-            testObject.Store(eventId, queueId, cookieValidity, cookieDomain, "idle", secretKey);
+            testObject.Store(eventId, queueId, cookieValidity, cookieDomain, "idle", secretKey, null);
 
             var cookieValues = CookieHelper.ToNameValueCollectionFromValue(cookies[cookieKey].Value);
             Assert.True(cookieValues[_FixedCookieValidityMinutesKey] == "3");
@@ -120,7 +120,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             fakeResponse.Stub(stub => stub.Cookies).Return(cookies);
 
             var testObject = new UserInQueueStateCookieRepository(fakeContext);
-            testObject.Store(eventId, queueId, 3, cookieDomain, "idle", secretKey);
+            testObject.Store(eventId, queueId, 3, cookieDomain, "idle", secretKey, null);
             Assert.True(cookies[cookieKey].Expires.Subtract(DateTime.UtcNow.AddDays(1)) < TimeSpan.FromMinutes(1));
             Assert.True(cookies[cookieKey].Domain == cookieDomain);
 
@@ -158,7 +158,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             fakeResponse.Stub(stub => stub.Cookies).Return(cookies);
 
             var testObject = new UserInQueueStateCookieRepository(fakeContext);
-            testObject.Store(eventId, queueId, 3, cookieDomain, "idle", secretKey);
+            testObject.Store(eventId, queueId, 3, cookieDomain, "idle", secretKey, null);
             Assert.True(cookies[cookieKey].Expires.Subtract(DateTime.UtcNow.AddDays(1)) < TimeSpan.FromMinutes(1));
             Assert.True(cookies[cookieKey].Domain == cookieDomain);
 
@@ -198,7 +198,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests
 
             var testObject = new UserInQueueStateCookieRepository(fakeContext);
 
-            testObject.Store(eventId, queueId, null, cookieDomain, "idle", secretKey);
+            testObject.Store(eventId, queueId, null, cookieDomain, "idle", secretKey, null);
             Assert.True(cookies[cookieKey].Expires.Subtract(DateTime.UtcNow.AddDays(1)) < TimeSpan.FromMinutes(1));
             Assert.True(cookies[cookieKey].Domain == cookieDomain);
 
@@ -237,7 +237,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests
 
             var testObject = new UserInQueueStateCookieRepository(fakeContext);
 
-            testObject.Store(eventId, queueId, null, cookieDomain, "queue", secretKey);
+            testObject.Store(eventId, queueId, null, cookieDomain, "queue", secretKey, null);
             Assert.True(cookies[cookieKey].Expires.Subtract(DateTime.UtcNow.AddDays(1)) < TimeSpan.FromMinutes(1));
             Assert.True(cookies[cookieKey].Domain == cookieDomain);
 

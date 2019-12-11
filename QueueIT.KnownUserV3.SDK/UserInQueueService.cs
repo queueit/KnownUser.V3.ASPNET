@@ -55,7 +55,8 @@ namespace QueueIT.KnownUserV3.SDK
                         null,
                         config.CookieDomain,
                         state.RedirectType,
-                        secretKey);
+                        secretKey,
+                        config.CookieHttpOnly);
                 }
                 return new RequestValidationResult(ActionType.QueueAction)
                 {
@@ -101,7 +102,8 @@ namespace QueueIT.KnownUserV3.SDK
                 queueParams.CookieValidityMinutes,
                 config.CookieDomain,
                 queueParams.RedirectType,
-                secretKey);
+                secretKey,
+                config.CookieHttpOnly);
 
             return new RequestValidationResult(ActionType.QueueAction)
             {

@@ -14,7 +14,7 @@ namespace QueueIT.KnownUserV3.SDK
 
         public static RequestValidationResult ValidateRequestByIntegrationConfig(
             string currentUrlWithoutQueueITToken, string queueitToken,
-            CustomerIntegration customerIntegrationInfo, string customerId, string secretKey)
+            CustomerIntegration customerIntegrationInfo, string customerId, string secretKey, bool? cookieHttpOnly = null)
         {
             var debugEntries = new Dictionary<string, string>();
 
@@ -54,7 +54,7 @@ namespace QueueIT.KnownUserV3.SDK
                     case ""://baackward compatibility
                     case ActionType.QueueAction:
                         {
-                            return HandleQueueAction(currentUrlWithoutQueueITToken, queueitToken, customerIntegrationInfo, customerId, secretKey, debugEntries, matchedConfig);
+                            return HandleQueueAction(currentUrlWithoutQueueITToken, queueitToken, customerIntegrationInfo, customerId, secretKey, debugEntries, matchedConfig, cookieHttpOnly);
                         }
                     case ActionType.CancelAction:
                         {
@@ -247,7 +247,7 @@ namespace QueueIT.KnownUserV3.SDK
             string currentUrlWithoutQueueITToken, string queueitToken,
             CustomerIntegration customerIntegrationInfo, string customerId,
             string secretKey, Dictionary<string, string> debugEntries,
-            IntegrationConfigModel matchedConfig)
+            IntegrationConfigModel matchedConfig, bool? cookieHttpOnly)
         {
             var targetUrl = "";
             switch (matchedConfig.RedirectLogic)
@@ -273,6 +273,7 @@ namespace QueueIT.KnownUserV3.SDK
                 LayoutName = matchedConfig.LayoutName,
                 CookieValidityMinute = matchedConfig.CookieValidityMinute.Value,
                 CookieDomain = matchedConfig.CookieDomain,
+                CookieHttpOnly = cookieHttpOnly,
                 Version = customerIntegrationInfo.Version
             };
 

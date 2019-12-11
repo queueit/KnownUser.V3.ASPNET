@@ -13,7 +13,8 @@ namespace QueueIT.KnownUserV3.SDK
             int? fixedCookieValidityMinutes,
             string cookieDomain,
             string redirectType,
-            string secretKey);
+            string secretKey,
+						bool? cookieHttpOnly);
 
         StateInfo GetState(
             string eventId,
@@ -59,14 +60,15 @@ namespace QueueIT.KnownUserV3.SDK
             int? fixedCookieValidityMinutes,
             string cookieDomain,
             string redirectType,
-            string secretKey)
+            string secretKey,
+            bool? cookieHttpOnly)
         {
             var cookieKey = GetCookieKey(eventId);
 
             var cookie = CreateCookie(
                 eventId, queueId,
                 Convert.ToString(fixedCookieValidityMinutes),
-                redirectType, cookieDomain, secretKey);
+                redirectType, cookieDomain, secretKey, cookieHttpOnly);
 
             if (_httpContext.Response.Cookies.AllKeys.Any(key => key == cookieKey))
                 _httpContext.Response.Cookies.Remove(cookieKey);
@@ -147,7 +149,7 @@ namespace QueueIT.KnownUserV3.SDK
                 eventId, cookieValues[_QueueIdKey],
                 cookieValues[_FixedCookieValidityMinutesKey],
                 cookieValues[_RedirectTypeKey],
-                cookie.Domain, secretKey);
+                cookie.Domain, secretKey, cookie.HttpOnly);
 
             if (_httpContext.Response.Cookies.AllKeys.Any(key => key == cookieKey))
                 _httpContext.Response.Cookies.Remove(cookieKey);
@@ -161,7 +163,8 @@ namespace QueueIT.KnownUserV3.SDK
             string fixedCookieValidityMinutes,
             string redirectType,
             string cookieDomain,
-            string secretKey)
+            string secretKey,
+            bool? cookieHttpOnly)
         {
             var cookieKey = GetCookieKey(eventId);
 
@@ -184,6 +187,9 @@ namespace QueueIT.KnownUserV3.SDK
                 cookie.Domain = cookieDomain;
 
             cookie.Expires = DateTime.UtcNow.AddDays(1);
+
+            if (cookieHttpOnly.HasValue)
+                cookie.HttpOnly = cookieHttpOnly.Value;
 
             return cookie;
         }

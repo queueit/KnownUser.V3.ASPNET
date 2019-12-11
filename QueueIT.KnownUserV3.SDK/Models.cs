@@ -56,6 +56,7 @@ namespace QueueIT.KnownUserV3.SDK
         public bool ExtendCookieValidity { get; set; }
         public int CookieValidityMinute { get; set; }
         public string CookieDomain { get; set; }
+        public bool? CookieHttpOnly { get; set; }
         public int Version { get; set; }
         public override string ToString()
         {

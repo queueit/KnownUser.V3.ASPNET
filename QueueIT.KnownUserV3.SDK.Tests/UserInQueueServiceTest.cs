@@ -40,7 +40,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             Assert.True(result.QueueId == queueId);
             Assert.True(result.RedirectType == "idle");
 
-            cookieProviderMock.AssertWasNotCalled(stub => stub.Store("", queueId, null, "", "", ""),
+            cookieProviderMock.AssertWasNotCalled(stub => stub.Store("", queueId, null, "", "", "", null),
                    options => options.IgnoreArguments());
             Assert.True(config.EventId == result.EventId);
         }
@@ -77,7 +77,8 @@ namespace QueueIT.KnownUserV3.SDK.Tests
                                 Arg<int?>.Is.Equal(null),
                                 Arg<string>.Is.Equal(config.CookieDomain),
                                 Arg<string>.Is.Equal("disabled"),
-                                Arg<string>.Is.Equal("key")));
+                                Arg<string>.Is.Equal("key"),
+                                Arg<bool?>.Is.Equal(null)));
             cookieProviderMock.AssertWasCalled(stub => stub.GetState("e1", 20, "key"));
             Assert.True(config.EventId == result.EventId);
         }
@@ -109,7 +110,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             Assert.True(result.RedirectType == "idle");
             Assert.True(!result.DoRedirect);
             cookieProviderMock.AssertWasNotCalled(stub =>
-                                stub.Store(null, null, 0, null, "", null), options => options.IgnoreArguments());
+                                stub.Store(null, null, 0, null, "", null, null), options => options.IgnoreArguments());
             Assert.True(config.EventId == result.EventId);
             cookieProviderMock.AssertWasCalled(stub => stub.GetState("e1", 10, customerKey));
         }
@@ -165,7 +166,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             var redirectUrl = regex.Replace(result.RedirectUrl, "");
             Assert.True(redirectUrl.ToUpper() == expectedErrorUrl.ToUpper());
             Assert.True(config.EventId == result.EventId);
-            cookieProviderMock.AssertWasNotCalled(stub => stub.Store("", "", null, "", "", ""),
+            cookieProviderMock.AssertWasNotCalled(stub => stub.Store("", "", null, "", "", "", null),
                 options => options.IgnoreArguments());
         }
 
@@ -216,7 +217,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             var redirectUrl = regex.Replace(result.RedirectUrl, "");
             Assert.True(redirectUrl.ToUpper() == expectedErrorUrl.ToUpper());
             Assert.True(config.EventId == result.EventId);
-            cookieProviderMock.AssertWasNotCalled(stub => stub.Store("", "", null, "", null, ""),
+            cookieProviderMock.AssertWasNotCalled(stub => stub.Store("", "", null, "", null, "", null),
                 options => options.IgnoreArguments());
         }
 
@@ -267,7 +268,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             var redirectUrl = regex.Replace(result.RedirectUrl, "");
             Assert.True(redirectUrl.ToUpper() == expectedErrorUrl.ToUpper());
             Assert.True(config.EventId == result.EventId);
-            cookieProviderMock.AssertWasNotCalled(stub => stub.Store("", "", null, "", null, ""),
+            cookieProviderMock.AssertWasNotCalled(stub => stub.Store("", "", null, "", null, "", null),
                 options => options.IgnoreArguments());
         }
 
@@ -311,7 +312,8 @@ namespace QueueIT.KnownUserV3.SDK.Tests
                                      Arg<int?>.Is.Equal(null),
                                      Arg<string>.Is.Equal(config.CookieDomain),
                                      Arg<string>.Is.Equal("queue"),
-                                     Arg<string>.Is.Equal(customerKey)));
+                                     Arg<string>.Is.Equal(customerKey),
+                                     Arg<bool?>.Is.Equal(null)));
             Assert.True(result.QueueId == queueId);
             Assert.True(result.RedirectType == "queue");
             Assert.True(config.EventId == result.EventId);
@@ -355,8 +357,8 @@ namespace QueueIT.KnownUserV3.SDK.Tests
                                      Arg<int?>.Is.Equal(3),
                                      Arg<string>.Is.Equal(config.CookieDomain),
                                      Arg<string>.Is.Equal("DirectLink"),
-                                     Arg<string>.Is.Equal(customerKey)));
-
+                                     Arg<string>.Is.Equal(customerKey),
+                                     Arg<bool?>.Is.Equal(null)));
         }
 
         [Fact]
@@ -392,7 +394,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             Assert.True(result.DoRedirect);
             Assert.True(result.RedirectUrl.ToUpper() == expectedUrl.ToUpper());
             cookieProviderMock.AssertWasNotCalled(stub =>
-                                stub.Store(null, null, null, null, null, null), options => options.IgnoreArguments());
+                                stub.Store(null, null, null, null, null, null, null), options => options.IgnoreArguments());
             Assert.True(config.EventId == result.EventId);
         }
 
@@ -428,7 +430,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             Assert.True(result.DoRedirect);
             Assert.True(result.RedirectUrl.ToUpper() == expectedUrl.ToUpper());
             cookieProviderMock.AssertWasNotCalled(stub =>
-                                stub.Store(null, null, null, null, null, null), options => options.IgnoreArguments());
+                                stub.Store(null, null, null, null, null, null, null), options => options.IgnoreArguments());
             Assert.True(config.EventId == result.EventId);
         }
 
@@ -465,7 +467,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             Assert.True(result.DoRedirect);
             Assert.True(result.RedirectUrl.StartsWith($"https://testDomain.com/error/hash/?c=testCustomer&e=e1&ver=v3-aspnet-{knownUserVersion}&cver=10&l=testlayout&queueittoken=ts_sasa~cv_adsasa~ce_falwwwse~q_944c1f44-60dd-4e37-aabc-f3e4bb1c8895&"));
             cookieProviderMock.AssertWasNotCalled(stub =>
-                                stub.Store(null, null, null, null, null, null), options => options.IgnoreArguments());
+                                stub.Store(null, null, null, null, null, null, null), options => options.IgnoreArguments());
             Assert.True(config.EventId == result.EventId);
 
         }
