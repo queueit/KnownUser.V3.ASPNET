@@ -7,7 +7,7 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfig
 {
     internal class IntegrationEvaluator : IIntegrationEvaluator
     {
-        public IntegrationConfigModel GetMatchedIntegrationConfig(CustomerIntegration customerIntegration, string currentPageUrl, HttpRequestBase request)
+        public IntegrationConfigModel GetMatchedIntegrationConfig(CustomerIntegration customerIntegration, string currentPageUrl, IHttpRequest request)
         {
             if (request == null)
                 throw new ArgumentException("request is null");
@@ -25,7 +25,7 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfig
             return null;
         }
 
-        private bool EvaluateTrigger(TriggerModel trigger, string currentPageUrl, HttpRequestBase request)
+        private bool EvaluateTrigger(TriggerModel trigger, string currentPageUrl, IHttpRequest request)
         {
             if (trigger.LogicalOperator == LogicalOperatorType.Or)
             {
@@ -47,14 +47,14 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfig
             }
         }
 
-        private bool EvaluateTriggerPart(TriggerPart triggerPart, string currentPageUrl, HttpRequestBase request)
+        private bool EvaluateTriggerPart(TriggerPart triggerPart, string currentPageUrl, IHttpRequest request)
         {
             switch (triggerPart.ValidatorType)
             {
                 case ValidatorType.UrlValidator:
                     return UrlValidatorHelper.Evaluate(triggerPart, currentPageUrl);
                 case ValidatorType.CookieValidator:
-                    return CookieValidatorHelper.Evaluate(triggerPart, request.Cookies);
+                    return CookieValidatorHelper.Evaluate(triggerPart, request);
                 case ValidatorType.UserAgentValidator:
                     return UserAgentValidatorHelper.Evaluate(triggerPart, request.UserAgent);
                 case ValidatorType.HttpHeaderValidator:
@@ -68,7 +68,7 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfig
     internal interface IIntegrationEvaluator
     {
         IntegrationConfigModel GetMatchedIntegrationConfig(
-            CustomerIntegration customerIntegration, string currentPageUrl, HttpRequestBase request);
+            CustomerIntegration customerIntegration, string currentPageUrl, IHttpRequest request);
     }
 
     internal class UrlValidatorHelper
@@ -134,24 +134,24 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfig
 
     internal static class CookieValidatorHelper
     {
-        public static bool Evaluate(TriggerPart triggerPart, HttpCookieCollection cookieCollection)
+        public static bool Evaluate(TriggerPart triggerPart, IHttpRequest request)
         {
             return ComparisonOperatorHelper.Evaluate(triggerPart.Operator,
                 triggerPart.IsNegative,
                 triggerPart.IsIgnoreCase,
-                GetCookie(triggerPart.CookieName, cookieCollection),
+                GetCookie(triggerPart.CookieName, request),
                 triggerPart.ValueToCompare,
                 triggerPart.ValuesToCompare);
         }
 
-        private static string GetCookie(string cookieName, HttpCookieCollection cookieCollection)
+        private static string GetCookie(string cookieName, IHttpRequest request)
         {
-            var cookie = cookieCollection?.Get(cookieName);
+            var cookie = request.GetCookieValue(cookieName);
 
             if (cookie == null)
                 return string.Empty;
 
-            return cookieCollection[cookieName].Value;
+            return cookie;
         }
     }
 

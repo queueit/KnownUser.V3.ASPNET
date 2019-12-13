@@ -25,12 +25,13 @@ namespace QueueIT.KnownUserV3.SDK
         void ExtendQueueCookie(
             string eventId,
             int cookieValidityMinutes,
+            string cookieDomain,
             string secretKey);
     }
 
     internal class UserInQueueService : IUserInQueueService
     {
-        internal const string SDK_VERSION = "3.5.1";
+        internal const string SDK_VERSION = "3.5.2";
         private readonly IUserInQueueStateRepository _userInQueueStateRepository;
 
         public UserInQueueService(IUserInQueueStateRepository queueStateRepository)
@@ -57,12 +58,10 @@ namespace QueueIT.KnownUserV3.SDK
                         state.RedirectType,
                         secretKey);
                 }
-                return new RequestValidationResult(ActionType.QueueAction)
-                {
-                    EventId = config.EventId,
-                    QueueId = state.QueueId,
-                    RedirectType = state.RedirectType
-                };
+                return new RequestValidationResult(ActionType.QueueAction,
+                    eventId: config.EventId,
+                    queueId: state.QueueId,
+                    redirectType: state.RedirectType);
             }
 
             QueueUrlParams queueParmas = QueueParameterHelper.ExtractQueueParams(queueitToken);
@@ -103,12 +102,11 @@ namespace QueueIT.KnownUserV3.SDK
                 queueParams.RedirectType,
                 secretKey);
 
-            return new RequestValidationResult(ActionType.QueueAction)
-            {
-                EventId = config.EventId,
-                QueueId = queueParams.QueueId,
-                RedirectType = queueParams.RedirectType
-            };
+            return new RequestValidationResult(
+                ActionType.QueueAction,
+                eventId: config.EventId,
+                queueId: queueParams.QueueId,
+                redirectType: queueParams.RedirectType);
         }
 
         private RequestValidationResult GetVaidationErrorResult(
@@ -129,11 +127,10 @@ namespace QueueIT.KnownUserV3.SDK
 
             var redirectUrl = $"https://{domainAlias}error/{errorCode}/?{query}";
 
-            return new RequestValidationResult(ActionType.QueueAction)
-            {
-                RedirectUrl = redirectUrl,
-                EventId = config.EventId
-            };
+            return new RequestValidationResult(
+                ActionType.QueueAction,
+                redirectUrl: redirectUrl,
+                eventId: config.EventId);
         }
 
         private RequestValidationResult GetInQueueRedirectResult(
@@ -145,11 +142,10 @@ namespace QueueIT.KnownUserV3.SDK
                 GetQueryString(customerId, config.EventId, config.Version, config.Culture, config.LayoutName) +
                     (!string.IsNullOrEmpty(targetUrl) ? $"&t={HttpUtility.UrlEncode(targetUrl)}" : "");
 
-            return new RequestValidationResult(ActionType.QueueAction)
-            {
-                RedirectUrl = redirectUrl,
-                EventId = config.EventId
-            };
+            return new RequestValidationResult(
+                ActionType.QueueAction,
+                redirectUrl: redirectUrl,
+                eventId: config.EventId);
         }
 
         private string GetQueryString(
@@ -177,9 +173,10 @@ namespace QueueIT.KnownUserV3.SDK
         public void ExtendQueueCookie(
             string eventId,
             int cookieValidityMinutes,
+            string cookieDomain,
             string secretKey)
         {
-            this._userInQueueStateRepository.ReissueQueueCookie(eventId, cookieValidityMinutes, secretKey);
+            this._userInQueueStateRepository.ReissueQueueCookie(eventId, cookieValidityMinutes, cookieDomain, secretKey);
         }
 
         public RequestValidationResult ValidateCancelRequest(
@@ -204,23 +201,16 @@ namespace QueueIT.KnownUserV3.SDK
 
                 var redirectUrl = "https://" + domainAlias + "cancel/" + customerId + "/" + config.EventId + "/?" + query;
 
-                return new RequestValidationResult(ActionType.CancelAction)
-                {
-                    RedirectUrl = redirectUrl,
-                    EventId = config.EventId,
-                    QueueId = state.QueueId,
-                    RedirectType = state.RedirectType
-                };
+                return new RequestValidationResult(ActionType.CancelAction,
+                    redirectUrl: redirectUrl,
+                    eventId: config.EventId,
+                    queueId: state.QueueId,
+                    redirectType: state.RedirectType);
             }
             else
             {
-                return new RequestValidationResult(ActionType.CancelAction)
-                {
-                    RedirectUrl = null,
-                    EventId = config.EventId,
-                    QueueId = null,
-                    RedirectType = null
-                };
+                return new RequestValidationResult(ActionType.CancelAction,
+                    eventId: config.EventId);
             }
         }
 

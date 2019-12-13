@@ -3,9 +3,38 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
+using System.Collections.Specialized;
 
 namespace QueueIT.KnownUserV3.SDK
 {
+    #region Internals
+    internal interface IHttpRequest
+    {
+        string UserAgent { get; }
+        NameValueCollection Headers { get; }
+        Uri Url { get; }
+        string UserHostAddress { get; }
+        string GetCookieValue(string cookieKey);
+    }
+
+    internal interface IHttpResponse
+    {
+        void SetCookie(string cookieName, string cookieValue, string domain, DateTime expiration);
+    }
+
+    internal interface IHttpContextProvider
+    {
+        IHttpRequest HttpRequest
+        {
+            get;
+        }
+        IHttpResponse HttpResponse
+        {
+            get;
+        }
+    }
+    #endregion
+
     public static class KnownUser
     {
         public const string QueueITTokenKey = "queueittoken";
@@ -26,7 +55,7 @@ namespace QueueIT.KnownUserV3.SDK
                     debugEntries["ConfigVersion"] = customerIntegrationInfo.Version.ToString();
                     debugEntries["PureUrl"] = currentUrlWithoutQueueITToken;
                     debugEntries["QueueitToken"] = queueitToken;
-                    debugEntries["OriginalUrl"] = GetHttpContextBase().Request.Url.AbsoluteUri;
+                    debugEntries["OriginalUrl"] = GetHttpContextProvider().HttpRequest.Url.AbsoluteUri;
 
                     LogExtraRequestDetails(debugEntries);
                 }
@@ -40,7 +69,7 @@ namespace QueueIT.KnownUserV3.SDK
                 var matchedConfig = configEvaluater.GetMatchedIntegrationConfig(
                     customerIntegrationInfo,
                     currentUrlWithoutQueueITToken,
-                    GetHttpContextBase()?.Request);
+                    GetHttpContextProvider().HttpRequest);
 
                 if (isDebug)
                 {
@@ -99,7 +128,7 @@ namespace QueueIT.KnownUserV3.SDK
                 debugEntries["TargetUrl"] = targetUrl;
                 debugEntries["QueueitToken"] = queueitToken;
                 debugEntries["CancelConfig"] = cancelConfig != null ? cancelConfig.ToString() : "NULL";
-                debugEntries["OriginalUrl"] = GetHttpContextBase().Request.Url.AbsoluteUri;
+                debugEntries["OriginalUrl"] = GetHttpContextProvider().HttpRequest.Url.AbsoluteUri;
                 LogExtraRequestDetails(debugEntries);
             }
             if (string.IsNullOrEmpty(targetUrl))
@@ -148,7 +177,7 @@ namespace QueueIT.KnownUserV3.SDK
                 debugEntries["TargetUrl"] = targetUrl;
                 debugEntries["QueueitToken"] = queueitToken;
                 debugEntries["QueueConfig"] = queueConfig != null ? queueConfig.ToString() : "NULL";
-                debugEntries["OriginalUrl"] = GetHttpContextBase().Request.Url.AbsoluteUri;
+                debugEntries["OriginalUrl"] = GetHttpContextProvider().HttpRequest.Url.AbsoluteUri;
                 LogExtraRequestDetails(debugEntries);
             }
             if (string.IsNullOrEmpty(customerId))
@@ -175,6 +204,7 @@ namespace QueueIT.KnownUserV3.SDK
         public static void ExtendQueueCookie(
             string eventId,
             int cookieValidityMinute,
+            string cookieDomain,
             string secretKey)
         {
             if (string.IsNullOrEmpty(eventId))
@@ -185,25 +215,26 @@ namespace QueueIT.KnownUserV3.SDK
                 throw new ArgumentException("secretKey can not be null or empty.");
 
             var userInQueueService = GetUserInQueueService();
-            userInQueueService.ExtendQueueCookie(eventId, cookieValidityMinute, secretKey);
+            userInQueueService.ExtendQueueCookie(eventId, cookieValidityMinute, cookieDomain, secretKey);
         }
 
-        //used for unit testing
-        internal static HttpContextBase _HttpContextBase;
+        internal static IHttpContextProvider _HttpContextProvider;
         internal static IUserInQueueService _UserInQueueService;
 
         private static IUserInQueueService GetUserInQueueService()
         {
             if (_UserInQueueService == null)
-                return new UserInQueueService(new UserInQueueStateCookieRepository(new HttpContextWrapper(HttpContext.Current)));
+                return new UserInQueueService(new UserInQueueStateCookieRepository(_HttpContextProvider));
             return _UserInQueueService;
         }
 
-        private static HttpContextBase GetHttpContextBase()
+        private static IHttpContextProvider GetHttpContextProvider()
         {
-            if (_HttpContextBase == null)
-                return new HttpContextWrapper(HttpContext.Current);
-            return _HttpContextBase;
+            if (_HttpContextProvider == null)
+            {
+                _HttpContextProvider = HttpContextProvider.Instance;
+            }
+            return _HttpContextProvider;
         }
 
         internal static void SetDebugCookie(Dictionary<string, string> debugEntries)
@@ -211,15 +242,13 @@ namespace QueueIT.KnownUserV3.SDK
             if (!debugEntries.Any())
                 return;
 
-            if (GetHttpContextBase().Response.Cookies.AllKeys.Any(key => key == QueueITDebugKey))
-                GetHttpContextBase().Response.Cookies.Remove(QueueITDebugKey);
-
             string cookieValue = string.Empty;
             foreach (var nameVal in debugEntries)
                 cookieValue += $"{nameVal.Key}={nameVal.Value}|";
 
-            cookieValue = HttpUtility.UrlEncode(cookieValue.TrimEnd('|'));
-            GetHttpContextBase().Response.Cookies.Add(new HttpCookie(QueueITDebugKey, cookieValue));
+            cookieValue = cookieValue.TrimEnd('|');
+            GetHttpContextProvider().HttpResponse.SetCookie(QueueITDebugKey, cookieValue, null, DateTime.UtcNow.AddMinutes(20));
+
         }
 
         private static bool GetIsDebug(string queueitToken, string secretKey)
@@ -235,12 +264,12 @@ namespace QueueIT.KnownUserV3.SDK
         private static void LogExtraRequestDetails(Dictionary<string, string> debugEntries)
         {
             debugEntries["ServerUtcTime"] = DateTime.UtcNow.ToString("o");
-            debugEntries["RequestIP"] = GetHttpContextBase().Request.UserHostAddress;
-            debugEntries["RequestHttpHeader_Via"] = GetHttpContextBase().Request.Headers["Via"];
-            debugEntries["RequestHttpHeader_Forwarded"] = GetHttpContextBase().Request.Headers["Forwarded"];
-            debugEntries["RequestHttpHeader_XForwardedFor"] = GetHttpContextBase().Request.Headers["X-Forwarded-For"];
-            debugEntries["RequestHttpHeader_XForwardedHost"] = GetHttpContextBase().Request.Headers["X-Forwarded-Host"];
-            debugEntries["RequestHttpHeader_XForwardedProto"] = GetHttpContextBase().Request.Headers["X-Forwarded-Proto"];
+            debugEntries["RequestIP"] = GetHttpContextProvider().HttpRequest.UserHostAddress;
+            debugEntries["RequestHttpHeader_Via"] = GetHttpContextProvider().HttpRequest.Headers["Via"];
+            debugEntries["RequestHttpHeader_Forwarded"] = GetHttpContextProvider().HttpRequest.Headers["Forwarded"];
+            debugEntries["RequestHttpHeader_XForwardedFor"] = GetHttpContextProvider().HttpRequest.Headers["X-Forwarded-For"];
+            debugEntries["RequestHttpHeader_XForwardedHost"] = GetHttpContextProvider().HttpRequest.Headers["X-Forwarded-Host"];
+            debugEntries["RequestHttpHeader_XForwardedProto"] = GetHttpContextProvider().HttpRequest.Headers["X-Forwarded-Proto"];
         }
 
         private static RequestValidationResult HandleQueueAction(
@@ -300,7 +329,7 @@ namespace QueueIT.KnownUserV3.SDK
         {
             return !IsQueueAjaxCall() ?
                         originalTargetUrl :
-                        HttpUtility.UrlDecode(GetHttpContextBase().Request.Headers[QueueITAjaxHeaderKey]);
+                        HttpUtility.UrlDecode(GetHttpContextProvider().HttpRequest.Headers[QueueITAjaxHeaderKey]);
         }
 
         private static RequestValidationResult HandleIgnoreAction()
@@ -312,7 +341,7 @@ namespace QueueIT.KnownUserV3.SDK
         }
         private static bool IsQueueAjaxCall()
         {
-            return !string.IsNullOrEmpty(GetHttpContextBase().Request.Headers[QueueITAjaxHeaderKey]);
+            return !string.IsNullOrEmpty(GetHttpContextProvider().HttpRequest.Headers[QueueITAjaxHeaderKey]);
         }
     }
 }

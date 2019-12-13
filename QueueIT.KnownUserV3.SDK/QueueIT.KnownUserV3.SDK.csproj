@@ -46,6 +46,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="HttpContextProvider.cs" />
     <Compile Include="IntegrationConfig\IntegrationConfigHelpers.cs" />
     <Compile Include="KnownUser.cs" />
     <Compile Include="QueueITHelpers.cs" />

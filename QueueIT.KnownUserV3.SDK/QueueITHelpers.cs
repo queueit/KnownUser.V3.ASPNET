@@ -150,8 +150,7 @@ namespace QueueIT.KnownUserV3.SDK
             try
             {
                 NameValueCollection result = new NameValueCollection();
-                var decoded = HttpUtility.UrlDecode(cookieValue);
-                var items = decoded.Split('&');
+                var items = cookieValue.Split('&');
                 foreach (var item in items)
                 {
                     var keyValue = item.Split('=');
@@ -173,7 +172,7 @@ namespace QueueIT.KnownUserV3.SDK
                 values.Add($"{key}={cookieValues[key]}");
 
             var result = string.Join("&", values);
-            return HttpUtility.UrlEncode(result);
+            return result;
         }
     }
 }

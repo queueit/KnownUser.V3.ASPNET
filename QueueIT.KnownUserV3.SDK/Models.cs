@@ -1,18 +1,27 @@
-﻿using System;
-using System.Web;
+﻿using System.Web;
 
 namespace QueueIT.KnownUserV3.SDK
 {
     public class RequestValidationResult
     {
-
-        public RequestValidationResult(string actionType)
+        public RequestValidationResult(
+            string actionType,
+            string eventId = null,
+            string queueId = null,
+            string redirectUrl = null,
+            string redirectType = null,
+            bool isAjaxResult = false)
         {
             ActionType = actionType;
+            EventId = eventId;
+            QueueId = queueId;
+            RedirectUrl = redirectUrl;
+            RedirectType = redirectType;
+            IsAjaxResult = isAjaxResult;
         }
 
-        public string RedirectUrl { get; internal set; }
-        public string QueueId { get; internal set; }
+        public string RedirectUrl { get; }
+        public string QueueId { get; }
         public bool DoRedirect
         {
             get
@@ -20,9 +29,9 @@ namespace QueueIT.KnownUserV3.SDK
                 return !string.IsNullOrEmpty(RedirectUrl);
             }
         }
-        public string EventId { get; internal set; }
-        public string ActionType { get; internal set; }
-        public string RedirectType { get; internal set; }
+        public string EventId { get; }
+        public string ActionType { get; }
+        public string RedirectType { get; }
         public bool IsAjaxResult { get; internal set; }
         public string AjaxQueueRedirectHeaderKey
         {
@@ -31,7 +40,8 @@ namespace QueueIT.KnownUserV3.SDK
                 return "x-queueit-redirect";
             }
         }
-        public string AjaxRedirectUrl {
+        public string AjaxRedirectUrl
+        {
             get
             {
                 if (!string.IsNullOrEmpty(RedirectUrl))

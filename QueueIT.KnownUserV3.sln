@@ -1,20 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28803.352
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QueueIT.KnownUserV3.SDK", "QueueIT.KnownUserV3.SDK\QueueIT.KnownUserV3.SDK.csproj", "{D6E1D188-2EA9-4B5A-BCBE-5F361C7BFDBD}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QueueIT.KnownUserV3.SDK.Tests", "QueueIT.KnownUserV3.SDK.Tests\QueueIT.KnownUserV3.SDK.Tests.csproj", "{DFFE3967-0844-43CB-930A-25CB57AA0724}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentation", "{79208A3F-832D-404E-BD8F-BF30C3093F95}"
-	ProjectSection(SolutionItems) = preProject
-		Documentation\ConfigurationProviderExample.PNG = Documentation\ConfigurationProviderExample.PNG
-		Documentation\KnownUserFlow.png = Documentation\KnownUserFlow.png
-		Documentation\QueueITHelpers.cs = Documentation\QueueITHelpers.cs
-		Documentation\README.md = Documentation\README.md
-		README.md = README.md
-	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,5 +24,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {4EB8794B-B76C-48B3-B2B6-F51EF48DB42D}
 	EndGlobalSection
 EndGlobal
