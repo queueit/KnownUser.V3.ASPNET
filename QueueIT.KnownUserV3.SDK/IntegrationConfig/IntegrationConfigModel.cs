@@ -76,10 +76,7 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfig
         public const string EqualS = "Equals";
         public const string Contains = "Contains";
         public const string EqualsAny = "EqualsAny";
-        public const string ContainsAny = "ContainsAny";
-        public const string StartsWith = "StartsWith";
-        public const string EndsWith = "EndsWith";
-        public const string MatchesWith = "MatchesWith";
+        public const string ContainsAny = "ContainsAny";        
     }
 
     internal static class LogicalOperatorType

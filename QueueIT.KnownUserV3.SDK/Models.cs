@@ -10,6 +10,7 @@ namespace QueueIT.KnownUserV3.SDK
             string queueId = null,
             string redirectUrl = null,
             string redirectType = null,
+            string actionName = null,
             bool isAjaxResult = false)
         {
             ActionType = actionType;
@@ -17,6 +18,7 @@ namespace QueueIT.KnownUserV3.SDK
             QueueId = queueId;
             RedirectUrl = redirectUrl;
             RedirectType = redirectType;
+            ActionName = actionName;
             IsAjaxResult = isAjaxResult;
         }
 
@@ -31,6 +33,7 @@ namespace QueueIT.KnownUserV3.SDK
         }
         public string EventId { get; }
         public string ActionType { get; }
+        public string ActionName { get; }
         public string RedirectType { get; }
         public bool IsAjaxResult { get; internal set; }
         public string AjaxQueueRedirectHeaderKey
@@ -46,7 +49,7 @@ namespace QueueIT.KnownUserV3.SDK
             {
                 if (!string.IsNullOrEmpty(RedirectUrl))
                 {
-                    return HttpUtility.UrlEncode(RedirectUrl);
+                    return System.Uri.EscapeDataString(RedirectUrl);
                 }
                 return string.Empty;
             }
@@ -58,7 +61,9 @@ namespace QueueIT.KnownUserV3.SDK
         public QueueEventConfig()
         {
             Version = -1;
+            ActionName = "unspecified";
         }
+
         public string EventId { get; set; }
         public string LayoutName { get; set; }
         public string Culture { get; set; }
@@ -67,11 +72,13 @@ namespace QueueIT.KnownUserV3.SDK
         public int CookieValidityMinute { get; set; }
         public string CookieDomain { get; set; }
         public int Version { get; set; }
+        public string ActionName { get; set; }
+
         public override string ToString()
         {
             return $"EventId:{EventId}&Version:{Version}" +
                 $"&QueueDomain:{QueueDomain}&CookieDomain:{CookieDomain}&ExtendCookieValidity:{ExtendCookieValidity}" +
-                $"&CookieValidityMinute:{CookieValidityMinute}&LayoutName:{LayoutName}&Culture:{Culture}";
+                $"&CookieValidityMinute:{CookieValidityMinute}&LayoutName:{LayoutName}&Culture:{Culture}&ActionName:{ActionName}";
         }
     }
 
@@ -80,15 +87,19 @@ namespace QueueIT.KnownUserV3.SDK
         public CancelEventConfig()
         {
             Version = -1;
+            ActionName = "unspecified";
         }
+
         public string EventId { get; set; }
         public string QueueDomain { get; set; }
         public int Version { get; set; }
         public string CookieDomain { get; set; }
+        public string ActionName { get; set; }
+
         public override string ToString()
         {
             return $"EventId:{EventId}&Version:{Version}" +
-                $"&QueueDomain:{QueueDomain}&CookieDomain:{CookieDomain}";
+                $"&QueueDomain:{QueueDomain}&CookieDomain:{CookieDomain}&ActionName:{ActionName}";
         }
     }
 }

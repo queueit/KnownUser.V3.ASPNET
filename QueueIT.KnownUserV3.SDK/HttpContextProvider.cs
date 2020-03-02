@@ -16,17 +16,17 @@ namespace QueueIT.KnownUserV3.SDK
 
     class HttpRequest : IHttpRequest
     {
-        public string UserAgent => System.Web.HttpContext.Current.Request.UserAgent;
+        public string UserAgent => HttpContext.Current.Request.UserAgent;
 
-        public NameValueCollection Headers => System.Web.HttpContext.Current.Request.Headers;
+        public NameValueCollection Headers => HttpContext.Current.Request.Headers;
 
-        public Uri Url => System.Web.HttpContext.Current.Request.Url;
+        public Uri Url => HttpContext.Current.Request.Url;
 
-        public string UserHostAddress => System.Web.HttpContext.Current.Request.UserHostAddress;
+        public string UserHostAddress => HttpContext.Current.Request.UserHostAddress;
 
         public string GetCookieValue(string cookieKey)
         {
-            var cookieValue = System.Web.HttpContext.Current.Request.Cookies[cookieKey]?.Value;
+            var cookieValue = HttpContext.Current.Request.Cookies[cookieKey]?.Value;
             if (cookieValue == null)
                 return null;
             return HttpUtility.UrlDecode(cookieValue);
@@ -37,19 +37,19 @@ namespace QueueIT.KnownUserV3.SDK
     {
         public void SetCookie(string cookieName, string cookieValue, string domain, DateTime expiration)
         {
-            if (System.Web.HttpContext.Current.Response.
+            if (HttpContext.Current.Response.
                 Cookies.AllKeys.Any(key => key == KnownUser.QueueITDebugKey))
             {
-                System.Web.HttpContext.Current.Response.Cookies.Remove(KnownUser.QueueITDebugKey);
+                HttpContext.Current.Response.Cookies.Remove(KnownUser.QueueITDebugKey);
             }
-            var cookie = new System.Web.HttpCookie(cookieName, HttpUtility.UrlEncode(cookieValue));            
+            var cookie = new HttpCookie(cookieName, Uri.EscapeDataString(cookieValue));
             if (!string.IsNullOrEmpty(domain))
             {
                 cookie.Domain = domain;
             }
             cookie.HttpOnly = false;
             cookie.Expires = expiration;
-            System.Web.HttpContext.Current.Response.Cookies.Add(cookie);
+            HttpContext.Current.Response.Cookies.Add(cookie);
         }
     }
 }

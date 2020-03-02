@@ -28,11 +28,11 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             var testObject = new UserInQueueStateCookieRepository(fakeContext);
             testObject.Store(eventId, queueId, null, cookieDomain, "Queue", secretKey);
             var cookieValues = CookieHelper.ToNameValueCollectionFromValue(fakeResponse.CookiesValue[cookieKey]["cookieValue"].ToString());
-            Assert.True(( (DateTime) fakeResponse.CookiesValue[cookieKey]["expiration"]).Subtract(DateTime.UtcNow.AddDays(1)) < TimeSpan.FromMinutes(1));
+            Assert.True(((DateTime)fakeResponse.CookiesValue[cookieKey]["expiration"]).Subtract(DateTime.UtcNow.AddDays(1)) < TimeSpan.FromMinutes(1));
             Assert.True(
                 DateTimeHelper.GetDateTimeFromUnixTimeStamp(cookieValues["IssueTime"])
                 .Subtract(DateTime.UtcNow) < TimeSpan.FromSeconds(10));
-            
+
             Assert.True(fakeResponse.CookiesValue[cookieKey]["domain"].ToString() == cookieDomain);
             Assert.True(cookieValues["EventId"] == eventId);
             Assert.True(cookieValues["RedirectType"] == "queue");
@@ -78,7 +78,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             var cookieValues = CookieHelper.ToNameValueCollectionFromValue(cookieValue);
             Assert.True(cookieValues[_FixedCookieValidityMinutesKey] == "3");
             Assert.True(((DateTime)fakeResponse.CookiesValue[cookieKey]["expiration"]).Subtract(DateTime.UtcNow.AddDays(1)) < TimeSpan.FromMinutes(1));
-            Assert.True(fakeResponse.CookiesValue[cookieKey]["domain"].ToString()== cookieDomain);
+            Assert.True(fakeResponse.CookiesValue[cookieKey]["domain"].ToString() == cookieDomain);
             Assert.True(
                 DateTimeHelper.GetDateTimeFromUnixTimeStamp(cookieValues["IssueTime"])
                 .Subtract(DateTime.UtcNow) < TimeSpan.FromSeconds(10));
@@ -342,11 +342,11 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             fakeContext.HttpResponse = fakeResponse;
 
             var testObject = new UserInQueueStateCookieRepository(fakeContext);
-            testObject.ReissueQueueCookie(eventId, 12,"testdomain", secretKey);
+            testObject.ReissueQueueCookie(eventId, 12, "testdomain", secretKey);
 
             var newIssueTime = DateTimeHelper.GetDateTimeFromUnixTimeStamp(CookieHelper.ToNameValueCollectionFromValue(fakeResponse.CookiesValue[cookieKey]["cookieValue"].ToString())["IssueTime"]);
             Assert.True(newIssueTime.Subtract(DateTime.UtcNow) < TimeSpan.FromSeconds(2));
-            Assert.True(fakeResponse.CookiesValue[cookieKey]["domain"].ToString()== "testdomain");
+            Assert.True(fakeResponse.CookiesValue[cookieKey]["domain"].ToString() == "testdomain");
 
             var state = testObject.GetState(eventId, 5, secretKey);
             Assert.True(state.IsValid);
@@ -372,7 +372,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             fakeContext.HttpResponse = fakeResponse;
 
             var testObject = new UserInQueueStateCookieRepository(fakeContext);
-            testObject.ReissueQueueCookie(eventId, 12,"testdomain", secretKey);
+            testObject.ReissueQueueCookie(eventId, 12, "testdomain", secretKey);
 
             var state = testObject.GetState(eventId, 12, secretKey);
             Assert.False(state.IsValid);
@@ -430,7 +430,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             var issueTime = DateTimeHelper.GetUnixTimeStampFromDate(DateTime.UtcNow.AddMinutes(-11));
             var hash = QueueITTokenGenerator.GetSHA256Hash(eventId.ToLower() + queueId + "queue" + issueTime.ToString(),
                 secretKey);
-            var cookieValue = HttpUtility.UrlEncode($"EventId={eventId}&QueueId={queueId}&RedirectType=queue&IssueTime={issueTime}&Hash={hash}");
+            var cookieValue = Uri.EscapeDataString($"EventId={eventId}&QueueId={queueId}&RedirectType=queue&IssueTime={issueTime}&Hash={hash}");
 
             KnownUserTest.HttpContextMock fakeContext = new KnownUserTest.HttpContextMock();
             var fakeRequest = new KnownUserTest.MockHttpRequest()
@@ -462,7 +462,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests
             var issueTime = DateTimeHelper.GetUnixTimeStampFromDate(DateTime.UtcNow.AddMinutes(-4));
             var hash = QueueITTokenGenerator.GetSHA256Hash(eventId.ToLower() + queueId + "3" + "idle" + issueTime.ToString(),
                 secretKey);
-            var cookieValue = HttpUtility.UrlEncode($"EventId={eventId}&QueueId={queueId}&{_FixedCookieValidityMinutesKey}=3&RedirectType=idle&IssueTime={issueTime}&Hash={hash}");
+            var cookieValue = Uri.EscapeDataString($"EventId={eventId}&QueueId={queueId}&{_FixedCookieValidityMinutesKey}=3&RedirectType=idle&IssueTime={issueTime}&Hash={hash}");
 
             KnownUserTest.HttpContextMock fakeContext = new KnownUserTest.HttpContextMock();
             var fakeRequest = new KnownUserTest.MockHttpRequest()

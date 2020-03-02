@@ -46,13 +46,17 @@ namespace QueueIT.KnownUserV3.SDK
             CustomerIntegration customerIntegrationInfo, string customerId, string secretKey)
         {
             var debugEntries = new Dictionary<string, string>();
+            var connectorDiagnostics = ConnectorDiagnostics.Verify(customerId, secretKey, queueitToken);
 
+            if (connectorDiagnostics.HasError)
+                return connectorDiagnostics.ValidationResult;
             try
             {
-                var isDebug = GetIsDebug(queueitToken, secretKey);
-                if (isDebug)
+                if (connectorDiagnostics.IsEnabled)
                 {
-                    debugEntries["ConfigVersion"] = customerIntegrationInfo.Version.ToString();
+                    debugEntries["SdkVersion"] = UserInQueueService.SDK_VERSION;
+                    debugEntries["Runtime"] = GetRuntime();
+                    debugEntries["ConfigVersion"] = customerIntegrationInfo != null ? customerIntegrationInfo.Version.ToString() : "NULL";
                     debugEntries["PureUrl"] = currentUrlWithoutQueueITToken;
                     debugEntries["QueueitToken"] = queueitToken;
                     debugEntries["OriginalUrl"] = GetHttpContextProvider().HttpRequest.Url.AbsoluteUri;
@@ -71,7 +75,7 @@ namespace QueueIT.KnownUserV3.SDK
                     currentUrlWithoutQueueITToken,
                     GetHttpContextProvider().HttpRequest);
 
-                if (isDebug)
+                if (connectorDiagnostics.IsEnabled)
                 {
                     debugEntries["MatchedConfig"] = matchedConfig != null ? matchedConfig.Name : "NULL";
                 }
@@ -80,21 +84,28 @@ namespace QueueIT.KnownUserV3.SDK
 
                 switch (matchedConfig.ActionType ?? string.Empty)
                 {
-                    case ""://baackward compatibility
+                    case ""://backward compatibility
                     case ActionType.QueueAction:
                         {
-                            return HandleQueueAction(currentUrlWithoutQueueITToken, queueitToken, customerIntegrationInfo, customerId, secretKey, debugEntries, matchedConfig);
+                            return HandleQueueAction(currentUrlWithoutQueueITToken, queueitToken, customerIntegrationInfo, 
+                                        customerId, secretKey, debugEntries, matchedConfig, connectorDiagnostics.IsEnabled);
                         }
                     case ActionType.CancelAction:
                         {
-                            return HandleCancelAction(currentUrlWithoutQueueITToken, queueitToken, customerIntegrationInfo, customerId, secretKey, debugEntries, matchedConfig);
+                            return HandleCancelAction(currentUrlWithoutQueueITToken, queueitToken, customerIntegrationInfo,
+                                        customerId, secretKey, debugEntries, matchedConfig, connectorDiagnostics.IsEnabled);
                         }
-                    default://default IgnoreAction
+                    default:
                         {
-                            return HandleIgnoreAction();
+                            return HandleIgnoreAction(matchedConfig.Name);
                         }
-
                 }
+            }
+            catch (Exception e)
+            {
+                if (connectorDiagnostics.IsEnabled)
+                    debugEntries["Exception"] = e.Message;
+                throw;
             }
             finally
             {
@@ -107,11 +118,19 @@ namespace QueueIT.KnownUserV3.SDK
             string customerId, string secretKey)
         {
             var debugEntries = new Dictionary<string, string>();
+            var connectorDiagnostics = ConnectorDiagnostics.Verify(customerId, secretKey, queueitToken);
 
+            if (connectorDiagnostics.HasError)
+                return connectorDiagnostics.ValidationResult;
             try
             {
-                targetUrl = GenerateTargetUrl(targetUrl);
-                return CancelRequestByLocalConfig(targetUrl, queueitToken, cancelConfig, customerId, secretKey, debugEntries);
+                return CancelRequestByLocalConfig(targetUrl, queueitToken, cancelConfig, customerId, secretKey, debugEntries, connectorDiagnostics.IsEnabled);
+            }
+            catch (Exception e)
+            {
+                if (connectorDiagnostics.IsEnabled)
+                    debugEntries["Exception"] = e.Message;
+                throw;
             }
             finally
             {
@@ -121,10 +140,14 @@ namespace QueueIT.KnownUserV3.SDK
 
         private static RequestValidationResult CancelRequestByLocalConfig(
             string targetUrl, string queueitToken, CancelEventConfig cancelConfig,
-            string customerId, string secretKey, Dictionary<string, string> debugEntries)
+            string customerId, string secretKey, Dictionary<string, string> debugEntries, bool isDebug)
         {
-            if (GetIsDebug(queueitToken, secretKey))
+            targetUrl = GenerateTargetUrl(targetUrl);
+           
+            if (isDebug)
             {
+                debugEntries["SdkVersion"] = UserInQueueService.SDK_VERSION;
+                debugEntries["Runtime"] = GetRuntime();
                 debugEntries["TargetUrl"] = targetUrl;
                 debugEntries["QueueitToken"] = queueitToken;
                 debugEntries["CancelConfig"] = cancelConfig != null ? cancelConfig.ToString() : "NULL";
@@ -150,17 +173,26 @@ namespace QueueIT.KnownUserV3.SDK
             return result;
         }
 
-
         public static RequestValidationResult ResolveQueueRequestByLocalConfig(
             string targetUrl, string queueitToken, QueueEventConfig queueConfig,
             string customerId, string secretKey)
         {
             var debugEntries = new Dictionary<string, string>();
+            var connectorDiagnostics = ConnectorDiagnostics.Verify(customerId, secretKey, queueitToken);
+
+            if (connectorDiagnostics.HasError)
+                return connectorDiagnostics.ValidationResult;
 
             try
             {
                 targetUrl = GenerateTargetUrl(targetUrl);
-                return ResolveQueueRequestByLocalConfig(targetUrl, queueitToken, queueConfig, customerId, secretKey, debugEntries);
+                return ResolveQueueRequestByLocalConfig(targetUrl, queueitToken, queueConfig, customerId, secretKey, debugEntries, connectorDiagnostics.IsEnabled);
+            }
+            catch (Exception e)
+            {
+                if (connectorDiagnostics.IsEnabled)
+                    debugEntries["Exception"] = e.Message;
+                throw;
             }
             finally
             {
@@ -170,10 +202,12 @@ namespace QueueIT.KnownUserV3.SDK
 
         private static RequestValidationResult ResolveQueueRequestByLocalConfig(
             string targetUrl, string queueitToken, QueueEventConfig queueConfig,
-            string customerId, string secretKey, Dictionary<string, string> debugEntries)
-        {
-            if (GetIsDebug(queueitToken, secretKey))
+            string customerId, string secretKey, Dictionary<string, string> debugEntries, bool isDebug)
+        {           
+            if (isDebug)
             {
+                debugEntries["SdkVersion"] = UserInQueueService.SDK_VERSION;
+                debugEntries["Runtime"] = GetRuntime();
                 debugEntries["TargetUrl"] = targetUrl;
                 debugEntries["QueueitToken"] = queueitToken;
                 debugEntries["QueueConfig"] = queueConfig != null ? queueConfig.ToString() : "NULL";
@@ -248,17 +282,6 @@ namespace QueueIT.KnownUserV3.SDK
 
             cookieValue = cookieValue.TrimEnd('|');
             GetHttpContextProvider().HttpResponse.SetCookie(QueueITDebugKey, cookieValue, null, DateTime.UtcNow.AddMinutes(20));
-
-        }
-
-        private static bool GetIsDebug(string queueitToken, string secretKey)
-        {
-            var qParams = QueueParameterHelper.ExtractQueueParams(queueitToken);
-
-            if (qParams != null && qParams.RedirectType != null && qParams.RedirectType.ToLower() == "debug")
-                return HashHelper.GenerateSHA256Hash(secretKey, qParams.QueueITTokenWithoutHash) == qParams.HashCode;
-
-            return false;
         }
 
         private static void LogExtraRequestDetails(Dictionary<string, string> debugEntries)
@@ -276,7 +299,7 @@ namespace QueueIT.KnownUserV3.SDK
             string currentUrlWithoutQueueITToken, string queueitToken,
             CustomerIntegration customerIntegrationInfo, string customerId,
             string secretKey, Dictionary<string, string> debugEntries,
-            IntegrationConfigModel matchedConfig)
+            IntegrationConfigModel matchedConfig, bool isDebug)
         {
             var targetUrl = "";
             switch (matchedConfig.RedirectLogic)
@@ -302,27 +325,28 @@ namespace QueueIT.KnownUserV3.SDK
                 LayoutName = matchedConfig.LayoutName,
                 CookieValidityMinute = matchedConfig.CookieValidityMinute.Value,
                 CookieDomain = matchedConfig.CookieDomain,
-                Version = customerIntegrationInfo.Version
+                Version = customerIntegrationInfo.Version,
+                ActionName = matchedConfig.Name
             };
 
-            return ResolveQueueRequestByLocalConfig(targetUrl, queueitToken, queueEventConfig, customerId, secretKey, debugEntries);
+            return ResolveQueueRequestByLocalConfig(targetUrl, queueitToken, queueEventConfig, customerId, secretKey, debugEntries, isDebug);
         }
 
         private static RequestValidationResult HandleCancelAction(
             string currentUrlWithoutQueueITToken, string queueitToken,
             CustomerIntegration customerIntegrationInfo, string customerId,
             string secretKey, Dictionary<string, string> debugEntries,
-            IntegrationConfigModel matchedConfig)
+            IntegrationConfigModel matchedConfig, bool isDebug)
         {
             var cancelEventConfig = new CancelEventConfig()
             {
                 QueueDomain = matchedConfig.QueueDomain,
                 EventId = matchedConfig.EventId,
                 Version = customerIntegrationInfo.Version,
-                CookieDomain = matchedConfig.CookieDomain
+                CookieDomain = matchedConfig.CookieDomain,
+                ActionName = matchedConfig.Name
             };
-            var targetUrl = GenerateTargetUrl(currentUrlWithoutQueueITToken);
-            return CancelRequestByLocalConfig(targetUrl, queueitToken, cancelEventConfig, customerId, secretKey, debugEntries);
+            return CancelRequestByLocalConfig(currentUrlWithoutQueueITToken, queueitToken, cancelEventConfig, customerId, secretKey, debugEntries, isDebug);
         }
 
         private static string GenerateTargetUrl(string originalTargetUrl)
@@ -332,16 +356,67 @@ namespace QueueIT.KnownUserV3.SDK
                         HttpUtility.UrlDecode(GetHttpContextProvider().HttpRequest.Headers[QueueITAjaxHeaderKey]);
         }
 
-        private static RequestValidationResult HandleIgnoreAction()
+        private static RequestValidationResult HandleIgnoreAction(string actionName)
         {
             var userInQueueService = GetUserInQueueService();
-            var result = userInQueueService.GetIgnoreResult();
+            var result = userInQueueService.GetIgnoreResult(actionName);
             result.IsAjaxResult = IsQueueAjaxCall();
             return result;
         }
+
         private static bool IsQueueAjaxCall()
         {
             return !string.IsNullOrEmpty(GetHttpContextProvider().HttpRequest.Headers[QueueITAjaxHeaderKey]);
+        }
+
+        internal static string GetRuntime()
+        {
+            try
+            {
+                string version = null;
+
+                const string subkey = @"SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full\";
+                using (var ndpKey = Microsoft.Win32.RegistryKey.OpenBaseKey(Microsoft.Win32.RegistryHive.LocalMachine, Microsoft.Win32.RegistryView.Registry32).OpenSubKey(subkey))
+                {
+                    if (ndpKey != null && ndpKey.GetValue("Release") != null)
+                        version = CheckFor45PlusVersion((int)ndpKey.GetValue("Release"));
+
+                    if (string.IsNullOrWhiteSpace(version))
+                        version = Environment.Version.ToString();
+                }
+
+                return version;
+            }
+            catch
+            {
+                return "unresolved";
+            }
+        }
+
+        // Checking the version using >= enables forward compatibility.
+        private static string CheckFor45PlusVersion(int releaseKey)
+        {
+            if (releaseKey >= 528040)
+                return "4.8 or later";
+            if (releaseKey >= 461808)
+                return "4.7.2";
+            if (releaseKey >= 461308)
+                return "4.7.1";
+            if (releaseKey >= 460798)
+                return "4.7";
+            if (releaseKey >= 394802)
+                return "4.6.2";
+            if (releaseKey >= 394254)
+                return "4.6.1";
+            if (releaseKey >= 393295)
+                return "4.6";
+            if (releaseKey >= 379893)
+                return "4.5.2";
+            if (releaseKey >= 378675)
+                return "4.5.1";
+            if (releaseKey >= 378389)
+                return "4.5";
+            return null;
         }
     }
 }
