@@ -93,7 +93,7 @@ namespace QueueIT.KnownUserV3.SDK
             HasError = true;
             ValidationResult = new RequestValidationResult(
                 "ConnectorDiagnosticsRedirect",
-                redirectUrl: string.Format("https://{0}.api2.queue-it.net/{0}/diagnostics/connector/error/{1}", customerId, errorCode)
+                redirectUrl: string.Format("https://{0}.api2.queue-it.net/{0}/diagnostics/connector/error/?code={1}", customerId, errorCode)
             );
         }
 
@@ -102,7 +102,7 @@ namespace QueueIT.KnownUserV3.SDK
             HasError = true;
             ValidationResult = new RequestValidationResult(
                 "ConnectorDiagnosticsRedirect",
-                redirectUrl: "https://api2.queue-it.net/diagnostics/connector/error/setup"
+                redirectUrl: "https://api2.queue-it.net/diagnostics/connector/error/?code=setup"
             );
         }
 

@@ -31,7 +31,7 @@ namespace QueueIT.KnownUserV3.SDK
 
     internal class UserInQueueService : IUserInQueueService
     {
-        internal const string SDK_VERSION = "v3-aspnet-" + "3.6.0";
+        internal const string SDK_VERSION = "v3-aspnet-" + "3.6.1";
 
         private readonly IUserInQueueStateRepository _userInQueueStateRepository;
 
