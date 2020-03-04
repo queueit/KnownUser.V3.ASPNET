@@ -1334,7 +1334,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests
 
             var result = KnownUser.ValidateRequestByIntegrationConfig("http://test.com?event1=true", expiredDebugToken, customerIntegration, null, "secretKey");
 
-            Assert.Equal("https://api2.queue-it.net/diagnostics/connector/error/setup", result.RedirectUrl);
+            Assert.Equal("https://api2.queue-it.net/diagnostics/connector/error/?code=setup", result.RedirectUrl);
             Assert.Empty(mockResponse.CookiesValue);
         }
 
@@ -1350,7 +1350,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests
 
             var result = KnownUser.ValidateRequestByIntegrationConfig("http://test.com?event1=true", expiredDebugToken, customerIntegration, "customerid", null);
 
-            Assert.Equal("https://api2.queue-it.net/diagnostics/connector/error/setup", result.RedirectUrl);
+            Assert.Equal("https://api2.queue-it.net/diagnostics/connector/error/?code=setup", result.RedirectUrl);
             Assert.Empty(mockResponse.CookiesValue);
         }
 
@@ -1366,7 +1366,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests
 
             var result = KnownUser.ValidateRequestByIntegrationConfig("http://test.com?event1=true", expiredDebugToken, customerIntegration, "customerId", "secretKey");
 
-            Assert.Equal("https://customerId.api2.queue-it.net/customerId/diagnostics/connector/error/timestamp", result.RedirectUrl);
+            Assert.Equal("https://customerId.api2.queue-it.net/customerId/diagnostics/connector/error/?code=timestamp", result.RedirectUrl);
             Assert.Empty(mockResponse.CookiesValue);
         }
 
@@ -1383,7 +1383,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests
 
             var result = KnownUser.ValidateRequestByIntegrationConfig("http://test.com?event1=true", invalidDebugToken, customerIntegration, "customerId", "secretKey");
 
-            Assert.Equal("https://customerId.api2.queue-it.net/customerId/diagnostics/connector/error/hash", result.RedirectUrl);
+            Assert.Equal("https://customerId.api2.queue-it.net/customerId/diagnostics/connector/error/?code=hash", result.RedirectUrl);
             Assert.Empty(mockResponse.CookiesValue);
         }
 
@@ -1514,7 +1514,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests
 
             var result = KnownUser.ResolveQueueRequestByLocalConfig("http://test.com?event1=true", expiredDebugToken, eventConfig, null, "secretKey");
 
-            Assert.Equal("https://api2.queue-it.net/diagnostics/connector/error/setup", result.RedirectUrl);
+            Assert.Equal("https://api2.queue-it.net/diagnostics/connector/error/?code=setup", result.RedirectUrl);
             Assert.Empty(mockResponse.CookiesValue);
         }
 
@@ -1530,7 +1530,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests
 
             var result = KnownUser.ResolveQueueRequestByLocalConfig("http://test.com?event1=true", expiredDebugToken, eventConfig, "customerid", null);
 
-            Assert.Equal("https://api2.queue-it.net/diagnostics/connector/error/setup", result.RedirectUrl);
+            Assert.Equal("https://api2.queue-it.net/diagnostics/connector/error/?code=setup", result.RedirectUrl);
             Assert.Empty(mockResponse.CookiesValue);
         }
 
@@ -1546,7 +1546,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests
 
             var result = KnownUser.ResolveQueueRequestByLocalConfig("http://test.com?event1=true", expiredDebugToken, eventConfig, "customerId", "secretKey");
 
-            Assert.Equal("https://customerId.api2.queue-it.net/customerId/diagnostics/connector/error/timestamp", result.RedirectUrl);
+            Assert.Equal("https://customerId.api2.queue-it.net/customerId/diagnostics/connector/error/?code=timestamp", result.RedirectUrl);
             Assert.Empty(mockResponse.CookiesValue);
         }
 
@@ -1563,7 +1563,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests
 
             var result = KnownUser.ResolveQueueRequestByLocalConfig("http://test.com?event1=true", invalidDebugToken, eventConfig, "customerId", "secretKey");
 
-            Assert.Equal("https://customerId.api2.queue-it.net/customerId/diagnostics/connector/error/hash", result.RedirectUrl);
+            Assert.Equal("https://customerId.api2.queue-it.net/customerId/diagnostics/connector/error/?code=hash", result.RedirectUrl);
             Assert.Empty(mockResponse.CookiesValue);
         }
 
@@ -1689,7 +1689,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests
 
             var result = KnownUser.CancelRequestByLocalConfig("http://test.com?event1=true", token, eventConfig, null, "secretkey");
 
-            Assert.Equal("https://api2.queue-it.net/diagnostics/connector/error/setup", result.RedirectUrl);
+            Assert.Equal("https://api2.queue-it.net/diagnostics/connector/error/?code=setup", result.RedirectUrl);
             Assert.Empty(mockResponse.CookiesValue);
         }
 
@@ -1705,7 +1705,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests
 
             var result = KnownUser.CancelRequestByLocalConfig("http://test.com?event1=true", token, eventConfig, "customerid", null);
 
-            Assert.Equal("https://api2.queue-it.net/diagnostics/connector/error/setup", result.RedirectUrl);
+            Assert.Equal("https://api2.queue-it.net/diagnostics/connector/error/?code=setup", result.RedirectUrl);
             Assert.Empty(mockResponse.CookiesValue);
         }
 
@@ -1721,7 +1721,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests
 
             var result = KnownUser.CancelRequestByLocalConfig("http://test.com?event1=true", expiredDebugToken, eventConfig, "customerId", "secretKey");
 
-            Assert.Equal("https://customerId.api2.queue-it.net/customerId/diagnostics/connector/error/timestamp", result.RedirectUrl);
+            Assert.Equal("https://customerId.api2.queue-it.net/customerId/diagnostics/connector/error/?code=timestamp", result.RedirectUrl);
             Assert.Empty(mockResponse.CookiesValue);
         }
 
@@ -1738,7 +1738,7 @@ namespace QueueIT.KnownUserV3.SDK.Tests
 
             var result = KnownUser.CancelRequestByLocalConfig("http://test.com?event1=true", invalidDebugToken, eventConfig, "customerId", "secretKey");
 
-            Assert.Equal("https://customerId.api2.queue-it.net/customerId/diagnostics/connector/error/hash", result.RedirectUrl);
+            Assert.Equal("https://customerId.api2.queue-it.net/customerId/diagnostics/connector/error/?code=hash", result.RedirectUrl);
             Assert.Empty(mockResponse.CookiesValue);
         }
 
