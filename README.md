@@ -10,7 +10,6 @@ The most important fields of the `queueittoken` are:
  - ts - a timestamp of how long this redirect is valid
  - h - a hash of the token
 
-
 The high level logic is as follows:
 
 ![The KnownUser validation flow](https://github.com/queueit/KnownUser.V3.ASPNET/blob/master/Documentation/KnownUserFlow.png)
@@ -28,7 +27,6 @@ To validate that the current user is allowed to enter your website (has been thr
  1. Providing the queue configuration to the KnownUser validation
  2. Validate the `queueittoken` and store a session cookie
 
-
 ### 1. Providing the queue configuration
 The recommended way is to use the Go Queue-it self-service portal to setup the configuration. 
 The configuration specifies a set of Triggers and Actions. A Trigger is an expression matching one, more or all URLs on your website. 
@@ -43,7 +41,6 @@ To validate that the user has been through the queue, use the `KnownUser.Validat
 This call will validate the timestamp and hash and if valid create a "QueueITAccepted-SDFrts345E-V3_[EventId]" cookie with a TTL as specified in the configuration.
 If the timestamp or hash is invalid, the user is send back to the queue.
 
-
 ## Implementation
 The KnownUser validation must be done on *all requests except requests for static resources like images, css files and ...*. 
 So, if you add the KnownUser validation logic to a central place like in Global.asax, then be sure that the Triggers only fire on page requests (including ajax requests) and not on e.g. image.
@@ -51,7 +48,7 @@ So, if you add the KnownUser validation logic to a central place like in Global.
 This example is using the *[IntegrationConfigProvider](https://github.com/queueit/KnownUser.V3.ASPNET/blob/master/Documentation/IntegrationConfigProvider.cs)* to download the queue configuration. 
 
 The following method is all that is needed to validate that a user has been through the queue:
-```
+```CSharp
 private void DoValidation()
 {
     try
@@ -117,14 +114,11 @@ This can be done by adding custom filtering logic to Global.asax
 
 **or** with a proper filtering on the Global.asax Application_BeginRequest(). 
 
-
 The following is an example of how to specify the configuration in code:
  
-```
+```CSharp
 private void DoValidationByLocalEventConfig()
 {
-
-
     try
     {
         var customerId = "Your Queue-it customer ID";
@@ -180,12 +174,14 @@ private void DoValidationByLocalEventConfig()
     }
 }
 ```
+
 ### Protecting ajax calls on static pages
 If you have some static html pages (might be behind cache servers) and you have some ajax calls from those pages needed to be protected by KnownUser library you need to follow these steps:
 1) You are using v.3.5.1 (or later) of the KnownUser library.
 2) Make sure KnownUser code will not run on static pages (by ignoring those URLs in your integration configuration).
 3) Add below JavaScript tags to static pages:
-```
+
+```JavaScript
 <script type="text/javascript" src="//static.queue-it.net/script/queueclient.min.js"></script>
 <script
   data-queueit-intercept-domain="{YOUR_CURRENT_DOMAIN}"
@@ -197,7 +193,7 @@ If you have some static html pages (might be behind cache servers) and you have 
 ```
 4) Use the following method to protect all dynamic calls (including dynamic pages and ajax calls).
 
-```
+```CSharp
 private void DoValidation()
 {
     try
