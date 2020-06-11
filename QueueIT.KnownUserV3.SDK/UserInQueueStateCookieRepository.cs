@@ -81,13 +81,14 @@ namespace QueueIT.KnownUserV3.SDK
                 var cookieKey = GetCookieKey(eventId);
                 var cookie = _httpContextProvider.HttpRequest.GetCookieValue(cookieKey);
                 if (cookie == null)
-                    return new StateInfo(false, string.Empty, null, string.Empty);
+                    return new StateInfo(false, false, string.Empty, null, string.Empty);
 
                 var cookieValues = CookieHelper.ToNameValueCollectionFromValue(cookie);
                 if (!IsCookieValid(secretKey, cookieValues, eventId, cookieValidityMinutes, validateTime))
-                    return new StateInfo(false, string.Empty, null, string.Empty);
+                    return new StateInfo(true, false, string.Empty, null, string.Empty);
 
                 return new StateInfo(
+                    true,
                     true, cookieValues[_QueueIdKey],
                     !string.IsNullOrEmpty(cookieValues[_FixedCookieValidityMinutesKey])
                         ? int.Parse(cookieValues[_FixedCookieValidityMinutesKey]) : (int?)null,
@@ -95,7 +96,7 @@ namespace QueueIT.KnownUserV3.SDK
             }
             catch (Exception)
             {
-                return new StateInfo(false, string.Empty, null, string.Empty);
+                return new StateInfo(true, false, string.Empty, null, string.Empty);
             }
         }
 
@@ -209,8 +210,9 @@ namespace QueueIT.KnownUserV3.SDK
 
     internal class StateInfo
     {
-        public bool IsValid { get; private set; }
-        public string QueueId { get; private set; }
+        public bool IsFound { get; }
+        public bool IsValid { get; }
+        public string QueueId { get; }
         public bool IsStateExtendable
         {
             get
@@ -218,11 +220,12 @@ namespace QueueIT.KnownUserV3.SDK
                 return IsValid && !FixedCookieValidityMinutes.HasValue;
             }
         }
-        public int? FixedCookieValidityMinutes { get; private set; }
-        public string RedirectType { get; private set; }
+        public int? FixedCookieValidityMinutes { get; }
+        public string RedirectType { get; }
 
-        public StateInfo(bool isValid, string queueId, int? fixedCookieValidityMinutes, string redirectType)
+        public StateInfo(bool isFound, bool isValid, string queueId, int? fixedCookieValidityMinutes, string redirectType)
         {
+            IsFound = isFound;
             IsValid = isValid;
             QueueId = queueId;
             FixedCookieValidityMinutes = fixedCookieValidityMinutes;

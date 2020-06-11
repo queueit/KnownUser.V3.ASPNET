@@ -389,7 +389,7 @@ namespace QueueIT.KnownUserV3.SDK
             }
             catch
             {
-                return "unresolved";
+                return "unknown";
             }
         }
 
