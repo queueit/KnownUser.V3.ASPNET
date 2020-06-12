@@ -69,9 +69,9 @@ private void DoValidation()
         if (validationResult.DoRedirect)
         {
             //Adding no cache headers to prevent browsers to cache requests
-            context.Response.Headers.Add("Cache-Control", "no-cache, no-store, must-revalidate, max-age=0"); 
-            context.Response.Headers.Add("Pragma", "no-cache");
-            context.Response.Headers.Add("Expires", "Fri, 01 Jan 1990 00:00:00 GMT");
+            Response.Headers.Add("Cache-Control", "no-cache, no-store, must-revalidate, max-age=0"); 
+            Response.Headers.Add("Pragma", "no-cache");
+            Response.Headers.Add("Expires", "Fri, 01 Jan 1990 00:00:00 GMT");
            //end
             //Send the user to the queue - either because hash was missing or because is was invalid
             Response.Redirect(validationResult.RedirectUrl,false);
@@ -144,9 +144,9 @@ private void DoValidationByLocalEventConfig()
         if (validationResult.DoRedirect)
         {
             //Adding no cache headers to prevent browsers to cache requests
-            context.Response.Headers.Add("Cache-Control", "no-cache, no-store, must-revalidate, max-age=0"); 
-            context.Response.Headers.Add("Pragma", "no-cache");
-            context.Response.Headers.Add("Expires", "Fri, 01 Jan 1990 00:00:00 GMT");
+            Response.Headers.Add("Cache-Control", "no-cache, no-store, must-revalidate, max-age=0"); 
+            Response.Headers.Add("Pragma", "no-cache");
+            Response.Headers.Add("Expires", "Fri, 01 Jan 1990 00:00:00 GMT");
             //end
             //Send the user to the queue - either becuase hash was missing or becuase is was invalid
             Response.Redirect(validationResult.RedirectUrl,false);
@@ -214,9 +214,9 @@ private void DoValidation()
         if (validationResult.DoRedirect)
         {
             //Adding no cache headers to prevent browsers to cache requests
-            context.Response.Headers.Add("Cache-Control", "no-cache, no-store, must-revalidate, max-age=0"); 
-            context.Response.Headers.Add("Pragma", "no-cache");
-            context.Response.Headers.Add("Expires", "Fri, 01 Jan 1990 00:00:00 GMT");
+            Response.Headers.Add("Cache-Control", "no-cache, no-store, must-revalidate, max-age=0"); 
+            Response.Headers.Add("Pragma", "no-cache");
+            Response.Headers.Add("Expires", "Fri, 01 Jan 1990 00:00:00 GMT");
             //end
            
             if (validationResult.IsAjaxResult)
