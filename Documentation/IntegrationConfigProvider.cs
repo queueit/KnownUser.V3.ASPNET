@@ -60,7 +60,7 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfigLoader
             int tryCount = 0;
             while (tryCount < 5)
             {
-                var configUrl = string.Format("https://{0}.queue-it.net/status/integrationconfig/{0}", _customerId);
+                var configUrl = string.Format("https://{0}.queue-it.net/status/integrationconfig/secure/{0}", _customerId);
                 try
                 {
                     HttpWebRequest request = (HttpWebRequest)WebRequest.Create(configUrl);
