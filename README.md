@@ -126,14 +126,16 @@ If your application server (maybe due to security reasons) is not allowed to do 
 
 1. Manually download the configuration file from Queue-it Go self-service portal, save it on your application server and load it from local disk
 2. Use an internal gateway server to download the configuration file and save to application server
-3. Specify the configuration in code without using the Trigger/Action paradigm. In this case it is important *only to queue-up page requests* and not requests for resources or AJAX calls. 
-This can be done by adding custom filtering logic to Global.asax 
+3. Specify the configuration in code without using the Trigger/Action paradigm. In this case it is important *only to queue-up page requests* and not requests for resources. 
+This can be done by 
 
-**or** if using asp.net mvc by adding it as an ActionFilter on the page controllers 
+   - Adding custom filtering logic to Global.asax 
 
-**or** if using aspx webforms then in the Master Page's Init() method 
+   - **or** if using asp.net mvc by adding it as an ActionFilter on the page controllers 
 
-**or** with a proper filtering on the Global.asax Application_BeginRequest(). 
+   - **or** if using aspx webforms then in the Master Page's Init() method 
+
+   - **or** with a proper filtering on the Global.asax Application_BeginRequest(). 
 
 The following is an example of how to specify the configuration in code:
  
@@ -151,12 +153,12 @@ private void DoValidationByLocalEventConfig()
         var eventConfig = new QueueEventConfig()
         {
             EventId = "event1", //ID of the queue to use
-            CookieDomain = ".mydomain.com", //Optional - Domain name where the Queue-it session cookie should be saved.
+            //CookieDomain = ".mydomain.com", //Optional - Domain name where the Queue-it session cookie should be saved.
             QueueDomain = "queue.mydomain.com", //Domain name of the queue.
             CookieValidityMinute = 15, //Validity of the Queue-it session cookie.
             ExtendCookieValidity = true, //Should the Queue-it session cookie validity time be extended each time the validation runs? 
-            Culture = "en-US", //Optional - Culture of the queue layout in the format specified here: https://msdn.microsoft.com/en-us/library/ee825488(v=cs.20).aspx. If unspecified then settings from Event will be used.
-            LayoutName = "MyCustomLayoutName" //Optional - Name of the queue layout. If unspecified then settings from Event will be used.
+            //Culture = "en-US", //Optional - Culture of the queue layout in the format specified here: https://msdn.microsoft.com/en-us/library/ee825488(v=cs.20).aspx. If unspecified then settings from Event will be used.
+            //LayoutName = "MyCustomLayoutName" //Optional - Name of the queue layout. If unspecified then settings from Event will be used.
         };
 
         //Verify if the user has been through the queue
