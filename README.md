@@ -55,13 +55,14 @@ private void DoValidation()
     {
         var customerId = "Your Queue-it customer ID";
         var secretKey = "Your 72 char secrete key as specified in Go Queue-it self-service platform";
+        var apiKey = "Your api-key as specified in Go Queue-it self-service platform";
 
         var queueitToken = Request.QueryString[KnownUser.QueueITTokenKey];
         var currentUrlWithoutQueueITToken = Regex.Replace(Request.Url.AbsoluteUri, @"([\?&])(" + KnownUser.QueueITTokenKey + "=[^&]*)", string.Empty, RegexOptions.IgnoreCase);
         // The currentUrlWithoutQueueITToken is used to match Triggers and as the Target url (where to return the users to)
         // It is therefor important that the currentUrlWithoutQueueITToken is exactly the url of the users browsers. So if your webserver is 
         // e.g. behind a load balancer that modifies the host name or port, reformat the currentUrlWithoutQueueITToken before proceeding
-        var integrationConfig = IntegrationConfigProvider.GetCachedIntegrationConfig(customerId);
+        var integrationConfig = IntegrationConfigProvider.GetCachedIntegrationConfig(customerId, apiKey);
   
         //Verify if the user has been through the queue
         var validationResult = KnownUser.ValidateRequestByIntegrationConfig(currentUrlWithoutQueueITToken, queueitToken, integrationConfig, customerId, secretKey);
