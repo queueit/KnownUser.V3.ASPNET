@@ -90,8 +90,7 @@ private void DoValidation()
         else
         {
             //Request can continue - we remove queueittoken form querystring parameter to avoid sharing of user specific token
-            if(HttpContext.Current.Request.Url.AbsoluteUri.Contains(KnownUser.QueueITTokenKey)
-                                                             && !string.IsNullOrEmpty(validationResult.ActionType))
+            if (HttpContext.Current.Request.Url.AbsoluteUri.Contains(KnownUser.QueueITTokenKey) && validationResult.ActionType == "Queue")
             {
                 Response.Redirect(currentUrlWithoutQueueITToken, false);
                 HttpContext.Current.ApplicationInstance.CompleteRequest();
@@ -187,7 +186,7 @@ private void DoValidationByLocalEventConfig()
         else
         {
             //Request can continue - we remove queueittoken form querystring parameter to avoid sharing of user specific token
-            if (HttpContext.Current.Request.AbsoluteUri.Contains(KnownUser.QueueITTokenKey))
+            if (HttpContext.Current.Request.Url.AbsoluteUri.Contains(KnownUser.QueueITTokenKey) && validationResult.ActionType == "Queue")
             {
                 Response.Redirect(currentUrlWithoutQueueITToken);
                 HttpContext.Current.ApplicationInstance.CompleteRequest();
