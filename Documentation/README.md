@@ -83,7 +83,7 @@ Integration configuration contains valuable information like triggers and action
 2. You need to decorate the request by adding API key in the request header. You can get API key in the Go Queue-it self-service portal.
 3. Remember to add Host header in the request if your framework doesn't do that automatically. A missing host header will result in a 400 Bad Request response.
    
-curl --request GET https://[your-customer-id].queue-it.net/status/integrationconfig/secure/[your-customer-id] --header 'api-key: [Customer API-Key]' --header 'Host: queue-it.net'
+curl --request GET https://[your-customer-id].queue-it.net/status/integrationconfig/secure/[your-customer-id] --header "api-key: [Customer API-Key]" --header "Host: queue-it.net"
 
 ## Helper functions
 The [QueueITHelpers.cs](https://github.com/queueit/KnownUser.V3.ASPNET/blob/master/Documentation/QueueITHelpers.cs) file includes some helper functions 
