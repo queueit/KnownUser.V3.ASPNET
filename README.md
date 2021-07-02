@@ -150,3 +150,7 @@ private void DoValidationByLocalEventConfig()
     }
 }
 ```
+
+## Helper functions
+The [QueueITHelpers.cs](https://github.com/queueit/KnownUser.V3.ASPNET/blob/master/Documentation/QueueITHelpers.cs) file includes some helper functions 
+to make the reading of the `queueittoken` easier. 
