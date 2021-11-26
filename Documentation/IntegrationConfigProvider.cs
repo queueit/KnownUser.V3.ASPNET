@@ -65,7 +65,7 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfigLoader
                 {
                     HttpWebRequest request = (HttpWebRequest)WebRequest.Create(configUrl);
                     request.Headers.Add("api-key", _apiKey);
-                    request.Headers.Add("User-Agent", "queueit-connector");
+                    request.UserAgent = "queueit-connector";
                     request.Timeout = _downloadTimeoutMS;
                     using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
                     {
