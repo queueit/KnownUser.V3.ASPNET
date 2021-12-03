@@ -1,6 +1,4 @@
-﻿using System.Web;
-
-namespace QueueIT.KnownUserV3.SDK
+﻿namespace QueueIT.KnownUserV3.SDK
 {
     public class RequestValidationResult
     {
@@ -71,14 +69,24 @@ namespace QueueIT.KnownUserV3.SDK
         public bool ExtendCookieValidity { get; set; }
         public int CookieValidityMinute { get; set; }
         public string CookieDomain { get; set; }
+        public bool IsCookieHttpOnly { get; set; }
+        public bool IsCookieSecure { get; set; }
         public int Version { get; set; }
         public string ActionName { get; set; }
 
         public override string ToString()
         {
-            return $"EventId:{EventId}&Version:{Version}" +
-                $"&QueueDomain:{QueueDomain}&CookieDomain:{CookieDomain}&ExtendCookieValidity:{ExtendCookieValidity}" +
-                $"&CookieValidityMinute:{CookieValidityMinute}&LayoutName:{LayoutName}&Culture:{Culture}&ActionName:{ActionName}";
+            return $"EventId:{EventId}" +
+                   $"&Version:{Version}" +
+                   $"&QueueDomain:{QueueDomain}" +
+                   $"&CookieDomain:{CookieDomain}" +
+                   $"&IsCookieHttpOnly:{IsCookieHttpOnly}" +
+                   $"&IsCookieSecure:{IsCookieSecure}" +
+                   $"&ExtendCookieValidity:{ExtendCookieValidity}" +
+                   $"&CookieValidityMinute:{CookieValidityMinute}" +
+                   $"&LayoutName:{LayoutName}" +
+                   $"&Culture:{Culture}" +
+                   $"&ActionName:{ActionName}";
         }
     }
 
@@ -94,12 +102,19 @@ namespace QueueIT.KnownUserV3.SDK
         public string QueueDomain { get; set; }
         public int Version { get; set; }
         public string CookieDomain { get; set; }
+        public bool IsCookieHttpOnly { get; set; }
+        public bool IsCookieSecure { get; set; }
         public string ActionName { get; set; }
 
         public override string ToString()
         {
-            return $"EventId:{EventId}&Version:{Version}" +
-                $"&QueueDomain:{QueueDomain}&CookieDomain:{CookieDomain}&ActionName:{ActionName}";
+            return $"EventId:{EventId}" +
+                   $"&Version:{Version}" +
+                   $"&QueueDomain:{QueueDomain}" +
+                   $"&CookieDomain:{CookieDomain}" +
+                   $"&IsCookieHttpOnly:{IsCookieHttpOnly}" +
+                   $"&IsCookieSecure:{IsCookieSecure}" +
+                   $"&ActionName:{ActionName}";
         }
     }
 }

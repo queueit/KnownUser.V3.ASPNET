@@ -7,6 +7,8 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfig
         public string Name { get; set; }
         public string EventId { get; set; }
         public string CookieDomain { get; set; }
+        public bool? IsCookieHttpOnly { get; set; }
+        public bool? IsCookieSecure { get; set; }
         public string LayoutName { get; set; }
         public string Culture { get; set; }
         public bool? ExtendCookieValidity { get; set; }
@@ -62,6 +64,7 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfig
         public const string CookieValidator = "CookieValidator";
         public const string UserAgentValidator = "UserAgentValidator";
         public const string HttpHeaderValidator = "HttpHeaderValidator";
+        public const string RequestBodyValidator = "RequestBodyValidator";
     }
 
     internal static class UrlPartType

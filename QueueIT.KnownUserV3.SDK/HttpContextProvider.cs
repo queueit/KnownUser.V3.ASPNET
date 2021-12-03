@@ -5,16 +5,31 @@ using System.Web;
 
 namespace QueueIT.KnownUserV3.SDK
 {
-    class HttpContextProvider : IHttpContextProvider
+    public class SDKInitializer
     {
-        public IHttpRequest HttpRequest { get; } = new HttpRequest();
-
-        public IHttpResponse HttpResponse { get; } = new HttpResponse();
-
-        public static IHttpContextProvider Instance { get; private set; } = new HttpContextProvider();
+        public static void SetHttpRequest(IHttpRequest httpRequest)
+        {
+            HttpContextProvider.SetHttpRequest(httpRequest);
+        }
     }
 
-    class HttpRequest : IHttpRequest
+    class HttpContextProvider : IHttpContextProvider
+    {
+        IHttpRequest _httpRequest;
+        public IHttpRequest HttpRequest => _httpRequest ?? (_httpRequest = new HttpRequest());
+
+        IHttpResponse _httpResponse;
+        public IHttpResponse HttpResponse => _httpResponse ?? (_httpResponse = new HttpResponse());
+
+        public static IHttpContextProvider Instance { get; } = new HttpContextProvider();
+
+        public static void SetHttpRequest(IHttpRequest httpRequest)
+        {
+            ((HttpContextProvider)Instance)._httpRequest = httpRequest;
+        }
+    }
+
+    public class HttpRequest : IHttpRequest
     {
         public string UserAgent => HttpContext.Current.Request.UserAgent;
 
@@ -31,24 +46,33 @@ namespace QueueIT.KnownUserV3.SDK
                 return null;
             return HttpUtility.UrlDecode(cookieValue);
         }
+
+        public virtual string GetRequestBodyAsString()
+        {
+            return string.Empty;
+        }
     }
 
-    class HttpResponse : IHttpResponse
+    internal class HttpResponse : IHttpResponse
     {
-        public void SetCookie(string cookieName, string cookieValue, string domain, DateTime expiration)
+        public void SetCookie(string cookieName, string cookieValue, string domain, DateTime expiration, bool isHttpOnly, bool isSecure)
         {
             if (HttpContext.Current.Response.
                 Cookies.AllKeys.Any(key => key == KnownUser.QueueITDebugKey))
             {
                 HttpContext.Current.Response.Cookies.Remove(KnownUser.QueueITDebugKey);
             }
+            
             var cookie = new HttpCookie(cookieName, Uri.EscapeDataString(cookieValue));
+            
             if (!string.IsNullOrEmpty(domain))
             {
                 cookie.Domain = domain;
             }
-            cookie.HttpOnly = false;
+            cookie.HttpOnly = isHttpOnly;
+            cookie.Secure = isSecure;
             cookie.Expires = expiration;
+
             HttpContext.Current.Response.Cookies.Add(cookie);
         }
     }

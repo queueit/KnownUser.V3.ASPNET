@@ -26,6 +26,7 @@ private void DoValidation()
         // The currentUrlWithoutQueueITToken is used to match Triggers and as the Target url (where to return the users to)
         // It is therefor important that the currentUrlWithoutQueueITToken is exactly the url of the users browsers. So if your webserver is 
         // e.g. behind a load balancer that modifies the host name or port, reformat the currentUrlWithoutQueueITToken before proceeding
+
         var integrationConfig = IntegrationConfigProvider.GetCachedIntegrationConfig(customerId, apiKey);
   
         //Verify if the user has been through the queue
@@ -42,12 +43,13 @@ private void DoValidation()
             if (validationResult.IsAjaxResult)
             {
                 //In case of ajax call send the user to the queue by sending a custom queue-it header and redirecting user to queue from javascript
-               Response.Headers.Add(validationResult.AjaxQueueRedirectHeaderKey, validationResult.AjaxRedirectUrl);
+                Response.Headers.Add(validationResult.AjaxQueueRedirectHeaderKey, validationResult.AjaxRedirectUrl);
+                Response.AddHeader("Access-Control-Expose-Headers", validationResult.AjaxQueueRedirectHeaderKey);
             }
             else
             {
                //Send the user to the queue - either becuase hash was missing or becuase is was invalid
-               Response.Redirect(validationResult.RedirectUrl,false);
+               Response.Redirect(validationResult.RedirectUrl, false);
             }
             HttpContext.Current.ApplicationInstance.CompleteRequest();
         }
@@ -95,15 +97,15 @@ private void DoValidationByLocalEventConfig()
         var queueitToken = Request.QueryString[KnownUser.QueueITTokenKey];
         var currentUrlWithoutQueueITToken = Regex.Replace(Request.Url.AbsoluteUri, @"([\?&])(" + KnownUser.QueueITTokenKey + "=[^&]*)", string.Empty, RegexOptions.IgnoreCase);
 
-        var eventConfig = new QueueEventConfig()
+        var eventConfig = new QueueEventConfig
         {
-            EventId = "event1", //ID of the queue to use
-            //CookieDomain = ".mydomain.com", //Optional - Domain name where the Queue-it session cookie should be saved.
-            QueueDomain = "queue.mydomain.com", //Domain name of the queue.
-            CookieValidityMinute = 15, //Validity of the Queue-it session cookie.
-            ExtendCookieValidity = true, //Should the Queue-it session cookie validity time be extended each time the validation runs? 
-            //Culture = "en-US", //Optional - Culture of the queue layout in the format specified here: https://msdn.microsoft.com/en-us/library/ee825488(v=cs.20).aspx. If unspecified then settings from Event will be used.
-            //LayoutName = "MyCustomLayoutName" //Optional - Name of the queue layout. If unspecified then settings from Event will be used.
+            EventId = "event1", // ID of the queue to use
+            CookieDomain = ".mydomain.com", // Optional - Domain name where the Queue-it session cookie should be saved. Default is to save on the domain of the request
+            QueueDomain = "queue.mydomain.com", // Optional - Domian name of the queue. Default is [CustomerId].queue-it.net
+            CookieValidityMinute = 15, // Optional - Validity of the Queue-it session cookie. Default is 10 minutes
+            ExtendCookieValidity = false, // Optional - Should the Queue-it session cookie validity time be extended each time the validation runs? Default is true.
+            Culture = "en-US", // Optional - Culture of the queue ticket layout in the format specified here: https://msdn.microsoft.com/en-us/library/ee825488(v=cs.20).aspx Default is to use what is specified on Event
+            LayoutName = "MyCustomLayoutName" // Optional - Name of the queue ticket layout - e.g. "Default layout by Queue-it". Default is to use what is specified on the Event
         };
 
         //Verify if the user has been through the queue
@@ -119,12 +121,13 @@ private void DoValidationByLocalEventConfig()
             if (validationResult.IsAjaxResult)
             {
                 //In case of ajax call send the user to the queue by sending a custom queue-it header and redirecting user to queue from javascript
-               Response.Headers.Add(validationResult.AjaxQueueRedirectHeaderKey, validationResult.AjaxRedirectUrl);
+                Response.Headers.Add(validationResult.AjaxQueueRedirectHeaderKey, validationResult.AjaxRedirectUrl);
+                Response.AddHeader("Access-Control-Expose-Headers", validationResult.AjaxQueueRedirectHeaderKey);
             }
              else
             {
                //Send the user to the queue - either becuase hash was missing or becuase is was invalid
-               Response.Redirect(validationResult.RedirectUrl,false);
+               Response.Redirect(validationResult.RedirectUrl, false);
             }
             HttpContext.Current.ApplicationInstance.CompleteRequest();
         }
@@ -154,3 +157,69 @@ private void DoValidationByLocalEventConfig()
 ## Helper functions
 The [QueueITHelpers.cs](https://github.com/queueit/KnownUser.V3.ASPNET/blob/master/Documentation/QueueITHelpers.cs) file includes some helper functions 
 to make the reading of the `queueittoken` easier. 
+
+## Advanced Features
+### Request body trigger
+
+The connector supports triggering on request body content. An example could be a POST call with specific item ID where you want end-users to queue up for.
+For this to work, you will need to contact Queue-it support or enable request body triggers in your integration settings in your GO Queue-it platform account.
+Once enabled you will need to update your integration so request body is available for the connector.  
+You need to create a custom HttpRequest similar to this one:
+
+```CSharp
+public class CustomHttpRequest : QueueIT.KnownUserV3.SDK.HttpRequest
+{
+    public string RequestBody { get; set; }
+
+    public override string GetRequestBodyAsString()
+    {
+        return RequestBody ?? base.GetRequestBodyAsString();
+    }
+}
+```
+
+Then, on each request, before calling the `DoValidation()` method, you should initialize the SDK with your custom HttpRequest implementation:
+
+```CSharp
+var customHttpRequest = new CustomHttpRequest
+{
+    RequestBody = GetBody()
+};
+SDKInitializer.SetHttpRequest(customHttpRequest);
+```
+
+The `GetBody()` function could be implemented like below. Make sure to set the `maxBytesToRead` to something appropriate for your needs.
+
+```CSharp
+/*
+ * Example of how the request body can be read and rewinded
+ */
+private string GetBody()
+{
+    // Limit the number of bytes needed to read, from the body, to avoid reading large requests
+    var maxBytesToRead = 1024 * 50;
+    var resultBuffer = new byte[maxBytesToRead];
+
+    // Rewind the stream in case it has already been consumed
+    HttpContext.Current.Request.InputStream.Seek(0, SeekOrigin.Begin);
+    var actualBytesRead = HttpContext.Current.Request.InputStream.Read(resultBuffer, 0, maxBytesToRead);
+
+    // Rewind the stream to allow next consumer to consume it
+    HttpContext.Current.Request.InputStream.Seek(0, SeekOrigin.Begin);
+
+    resultBuffer = resultBuffer.Take(actualBytesRead).ToArray();
+
+    return new string(HttpContext.Current.Request.ContentEncoding.GetChars(resultBuffer));
+}
+```
+
+### Ignore specific HTTP verbs
+You can ignore specific HTTP methods, by checking the request method, before calling `DoValidation()`. If you are using CORS, it might be best to ignore `OPTIONS` requests, since they are used by CORS to retrieve your server's configuration.
+You can ignore `OPTIONS` requests using the following method:
+
+```CSharp
+private bool IsIgnored()
+{
+    return string.Equals(Request.HttpMethod, "options", StringComparison.OrdinalIgnoreCase);
+}
+```

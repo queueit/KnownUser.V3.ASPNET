@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Specialized;
 using System.Text.RegularExpressions;
-using System.Web;
 
 namespace QueueIT.KnownUserV3.SDK.IntegrationConfig
 {
@@ -59,6 +58,8 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfig
                     return UserAgentValidatorHelper.Evaluate(triggerPart, request.UserAgent);
                 case ValidatorType.HttpHeaderValidator:
                     return HttpHeaderValidatorHelper.Evaluate(triggerPart, request.Headers);
+                case ValidatorType.RequestBodyValidator:
+                    return RequestBodyValidatorHelper.Evaluate(triggerPart, request.GetRequestBodyAsString());
                 default:
                     return false;
             }
@@ -176,6 +177,19 @@ namespace QueueIT.KnownUserV3.SDK.IntegrationConfig
                 triggerPart.IsNegative,
                 triggerPart.IsIgnoreCase,
                 httpHeaders?.Get(triggerPart.HttpHeaderName) ?? string.Empty,
+                triggerPart.ValueToCompare,
+                triggerPart.ValuesToCompare);
+        }
+    }
+
+    internal static class RequestBodyValidatorHelper
+    {
+        public static bool Evaluate(TriggerPart triggerPart, string bodyValue)
+        {
+            return ComparisonOperatorHelper.Evaluate(triggerPart.Operator,
+                triggerPart.IsNegative,
+                triggerPart.IsIgnoreCase,
+                bodyValue ?? string.Empty,
                 triggerPart.ValueToCompare,
                 triggerPart.ValuesToCompare);
         }
