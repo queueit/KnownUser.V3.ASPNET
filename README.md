@@ -1,4 +1,7 @@
 # Queue-it KnownUser SDK for ASP.NET
+
+**This is not the most recent version. In order to obtain access to the most recent version, please contact your local Queue-it representative or Queue-it Support**
+
 Before getting started please read the [documentation](https://github.com/queueit/Documentation/tree/main/serverside-connectors) to get acquainted with server-side connectors.
 
 This connector supports .NET Framework 4.0+.
